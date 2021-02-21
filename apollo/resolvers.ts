@@ -1,9 +1,9 @@
 const resolvers = {
     Query: {
-        ping() {
+        ping(): string {
             return 'pong';
-        }
-    }
+        },
+    },
 };
 
 export default resolvers;

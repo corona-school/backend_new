@@ -1,5 +1,5 @@
 {
-  "watch": ["."],
-  "ext": "ts,prisma",
-  "exec": "ts-node"
+    "watch": ["."],
+    "ext": "ts,prisma",
+    "exec": "ts-node"
 }

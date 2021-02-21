@@ -1,8 +1,8 @@
 services:
-  postgres:
-    image: postgres:latest
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: user
-      POSTGRES_DB: coronaschool-dev-new
+    postgres:
+        image: postgres:latest
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: user
+            POSTGRES_DB: coronaschool-dev-new
