@@ -1,6 +1,6 @@
-import { ConfigureApollo } from "../apollo";
+import { ConfigureApollo } from '../apollo';
 import express from 'express';
-import {ConfigureREST} from "../rest";
+import {ConfigureREST} from '../rest';
 
 const app = express();
 

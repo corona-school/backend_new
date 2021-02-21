@@ -1,6 +1,6 @@
-import express from "express";
+import express from 'express';
 
-export const ConfigureREST = (app: express.Application) => {
+export const ConfigureREST = (app: express.Application) : void => {
     const restApi = express.Router();
 
     restApi.get('/ping',
@@ -9,4 +9,4 @@ export const ConfigureREST = (app: express.Application) => {
     );
 
     app.use('/rest', restApi);
-}
+};
