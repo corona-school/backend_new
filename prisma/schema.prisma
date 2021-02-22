@@ -9,3 +9,18 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
+
+model Pupil {
+    id          Int         @id @default(autoincrement())
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @default(now())
+    email       String      @unique
+    firstName   String
+    lastName    String
+}
+
+model Volunteer {
+    email       String      @unique
+    firstName   String
+    lastName    String
+}
