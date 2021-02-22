@@ -1,0 +1,40 @@
+services:
+    server:
+        build:
+            context: .
+            dockerfile: docker/Dockerfile-Server
+        volumes:
+            - ./:/code
+            - ./:/app
+        container_name: docker-server
+        restart: unless-stopped
+        ports:
+            - 5000:5000
+        environment:
+            - DATABASE_URL=postgresql://user:user@localhost:5001/coronaschool-dev-new
+            - PORT=5000
+            - NODE_ENV=dev
+        command: npx nodemon --watch /app app/server/index.ts
+        depends_on:
+            - postgres
+    postgres:
+        container_name: postgres
+        image: postgres:latest
+        restart: unless-stopped
+        ports:
+        -   5432:5432
+        environment:
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: user
+            POSTGRES_DB: coronaschool-dev-new
+
+    migration:
+        container_name: migration
+        build:
+            context: .
+            dockerfile: docker/Dockerfile-Migration
+        environment:
+            - DATABASE_URL=postgresql://user:user@postgres:5432/coronaschool-dev-new
+        depends_on:
+            - postgres
+
