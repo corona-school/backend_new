@@ -10,17 +10,63 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Pupil {
-    id          Int         @id @default(autoincrement())
+model User {
+    id          String      @id @default(cuid())
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @default(now())
     email       String      @unique
     firstName   String
-    lastName    String
+    lastName    String?
+}
+
+model Pupil {
+    id          String      @id @default(cuid())
+    user        User        @relation(fields:[userId],references:[id])
+    userId      String
 }
 
 model Volunteer {
-    email       String      @unique
-    firstName   String
-    lastName    String
+    id          String      @id @default(cuid())
+    user        User        @relation(fields:[userId],references:[id])
+    userId      String
+    offers      Offer[]
+}
+
+model Offer {
+    id          String      @id @default(cuid())
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @default(now())
+    volunteer   Volunteer   @relation(fields:[volunteerId],references:[id])
+    volunteerId String
+    description String
+}
+
+model AuthenticationData {
+    id          String      @id @default(cuid())
+    user        User        @relation(fields:[userId],references:[id])
+    userId      String
+    password    String
+}
+
+
+model PupilMatchRequest {
+    id          String      @id @default(cuid())
+    user        Pupil       @relation(fields:[requestor],references:[id])
+    requestor   String
+    parameters  String[]
+}
+
+model VolunteerMatchRequest {
+    id          String      @id @default(cuid())
+    user        Volunteer   @relation(fields:[requestor],references:[id])
+    requestor   String
+    parameters  String[]
+}
+
+model RequestMatches {
+    id              String          @id @default(cuid())
+    pupilReq        PupilMatchRequest    @relation(fields:[pupilReqId],references:[id])
+    volunteerReq    VolunteerMatchRequest    @relation(fields:[volunteerReqId],references:[id])
+    pupilReqId      String
+    volunteerReqId  String
 }

@@ -1,0 +1,2 @@
+-- AddForeignKey
+ALTER TABLE "Offer" ADD FOREIGN KEY ("volunteerId") REFERENCES "Volunteer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
