@@ -15,6 +15,8 @@ model User {
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @default(now())
     email       String      @unique
+    active      Boolean     @default(false)
+    notificationLevel NotificationLevel @default(all)
     firstName   String
     lastName    String?
 }
@@ -71,4 +73,27 @@ model RequestMatches {
     volunteerReq    VolunteerMatchRequest    @relation(fields:[volunteerReqId],references:[id])
     pupilReqId      String
     volunteerReqId  String
+}
+
+model Notifications {
+    id              String          @id @default(cuid())
+    sender          String          @default("ayush.pandey@corona-school.de")
+    recipient       User            @relation(fields:[recipientEmail],references:[email])
+    recipientEmail  String
+    subject         String
+    textContent     String?
+    htmlContent     String?
+    status          NotificationStatus @default(pending)
+}
+
+
+enum NotificationLevel {
+    necessary
+    all
+}
+
+enum NotificationStatus {
+    sent
+    error
+    pending
 }

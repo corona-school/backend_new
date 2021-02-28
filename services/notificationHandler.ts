@@ -1,0 +1,53 @@
+import { getPendingNotifications, markNotification } from './dataStore';
+import { logError, logInfo } from './logger';
+import mailjet from 'node-mailjet';
+import { response } from 'express';
+
+let mailjetAPI: mailjet.Email.Client;
+if (
+    process.env.MAILJET_API === undefined ||
+    process.env.MAILJET_SECRET === undefined
+) {
+    logError('Mailjet API not configured properly');
+} else {
+    mailjetAPI = mailjet.connect(
+        process.env.MAILJET_API,
+        process.env.MAILJET_SECRET
+    );
+}
+
+export const startNotificationHandler = (interval: number) => {
+    logInfo('Started Notification Handler');
+    setInterval(notificationHandler, interval);
+};
+
+function notificationHandler() {
+    getPendingNotifications().then((notifications) => {
+        notifications.forEach((notification) => {
+
+            mailjetAPI.post('send', { version: 'v3.1' }).request({
+                Messages: [
+                    {
+                        From: {
+                            Email: 'ayush.pandey@corona-school.de',
+                            Name: 'Ayush',
+                        },
+                        To: [
+                            {
+                                Email: notification.recipientEmail,
+                                Name: 'Ayush',
+                            },
+                        ],
+                        Subject: notification.subject,
+                        TextPart: notification.textContent,
+                        HTMLPart: notification.htmlContent,
+                        CustomID: notification.id,
+                    },
+                ],
+            });
+            markNotification(notification.id).then((response) =>
+                logInfo('Mark notification ' + notification.id + ' sent')
+            );
+        });
+    });
+}

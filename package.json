@@ -21,10 +21,13 @@
         "dotenv": "^8.2.0",
         "express": "^4.17.1",
         "graphql": "^15.5.0",
-        "helmet": "^4.4.1"
+        "helmet": "^4.4.1",
+        "log4js": "^6.3.0",
+        "node-mailjet": "^3.3.1"
     },
     "devDependencies": {
         "@types/node": "^14.14.28",
+        "@types/node-mailjet": "^3.3.4",
         "@typescript-eslint/eslint-plugin": "^4.15.1",
         "@typescript-eslint/parser": "^4.15.1",
         "apollo": "^2.32.5",
