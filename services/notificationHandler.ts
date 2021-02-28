@@ -1,7 +1,6 @@
 import { getPendingNotifications, markNotification } from './dataStore';
 import { logError, logInfo } from './logger';
 import mailjet from 'node-mailjet';
-import { response } from 'express';
 
 let mailjetAPI: mailjet.Email.Client;
 if (
@@ -23,31 +22,40 @@ export const startNotificationHandler = (interval: number) => {
 
 function notificationHandler() {
     getPendingNotifications().then((notifications) => {
-        notifications.forEach((notification) => {
-
-            mailjetAPI.post('send', { version: 'v3.1' }).request({
-                Messages: [
-                    {
-                        From: {
-                            Email: 'ayush.pandey@corona-school.de',
-                            Name: 'Ayush',
-                        },
-                        To: [
-                            {
-                                Email: notification.recipientEmail,
-                                Name: 'Ayush',
+        notifications.forEach(
+            (notification: {
+                id: string;
+                sender: string;
+                recipientEmail: string;
+                status: string;
+                textContent: string | null;
+                htmlContent: string | null;
+                subject: string;
+            }) => {
+                mailjetAPI.post('send', { version: 'v3.1' }).request({
+                    Messages: [
+                        {
+                            From: {
+                                Email: process.env.SENDER_EMAIL,
+                                Name: process.env.SENDER_NAME,
                             },
-                        ],
-                        Subject: notification.subject,
-                        TextPart: notification.textContent,
-                        HTMLPart: notification.htmlContent,
-                        CustomID: notification.id,
-                    },
-                ],
-            });
-            markNotification(notification.id).then((response) =>
-                logInfo('Mark notification ' + notification.id + ' sent')
-            );
-        });
+                            To: [
+                                {
+                                    Email: notification.recipientEmail,
+                                    Name: 'Ayush',
+                                },
+                            ],
+                            Subject: notification.subject,
+                            TextPart: notification.textContent,
+                            HTMLPart: notification.htmlContent,
+                            CustomID: notification.id,
+                        },
+                    ],
+                });
+                markNotification(notification.id).then((response) =>
+                    logInfo('Mark notification ' + notification.id + ' sent')
+                );
+            }
+        );
     });
 }

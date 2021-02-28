@@ -2,6 +2,11 @@ import { PrismaClient } from '@prisma/client';
 import { text } from 'express';
 import { logError } from './logger';
 
+enum notificationLevels {
+    all,
+    necessary,
+}
+
 const prisma = new PrismaClient();
 
 export async function getUser(clause: { email: string }) {
@@ -14,8 +19,9 @@ export async function getUser(clause: { email: string }) {
 
 export async function addUser(details: {
     firstName: string;
-    lastName: string;
+    lastName: string | null;
     email: string;
+    notificationLevel: 'all' | 'necessary';
 }) {
     const user = prisma.user.create({ data: details });
     return user;
