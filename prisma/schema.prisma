@@ -61,6 +61,8 @@ model VolunteerMatchRequest {
     user        Volunteer   @relation(fields:[requestor],references:[id])
     requestor   String
     parameters  String[]
+    offer       Offer       @relation(fields:[offerId],references:[id])
+    offerId     String
 }
 
 model RequestMatches {
