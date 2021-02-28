@@ -1,21 +1,8 @@
 import { PrismaClient } from '@prisma/client';
-import { text } from 'express';
+
 import { logError } from './logger';
 
-enum notificationLevels {
-    all,
-    necessary,
-}
-
 const prisma = new PrismaClient();
-
-export async function getUser(clause: { email: string }) {
-    const user = prisma.user.findUnique({
-        where: clause,
-    });
-
-    return user;
-}
 
 export async function addUser(details: {
     firstName: string;
@@ -23,16 +10,15 @@ export async function addUser(details: {
     email: string;
     notificationLevel: 'all' | 'necessary';
 }) {
-    const user = prisma.user.create({ data: details });
-    return user;
+    return prisma.user.create({ data: details });
 }
+
 export async function getPendingNotifications() {
-    const notifications = prisma.notifications.findMany({
+    return prisma.notifications.findMany({
         where: {
             status: 'pending',
         },
     });
-    return notifications;
 }
 
 export async function addNotification(
@@ -50,7 +36,7 @@ export async function addNotification(
 
     user.then((response) => {
         if (response !== null) {
-            const notification = prisma.notifications.create({
+            return prisma.notifications.create({
                 data: {
                     recipientEmail: recipient,
                     subject: content.Subject,
@@ -58,7 +44,6 @@ export async function addNotification(
                     htmlContent: content.HTMLContent,
                 },
             });
-            return notification;
         } else {
             logError('Mail recipient ' + recipient + ' does not exist');
         }
@@ -66,7 +51,7 @@ export async function addNotification(
 }
 
 export async function markNotification(notificationId: string) {
-    const notification = prisma.notifications.update({
+    return prisma.notifications.update({
         where: {
             id: notificationId,
         },
@@ -74,6 +59,4 @@ export async function markNotification(notificationId: string) {
             status: 'sent',
         },
     });
-
-    return notification;
 }

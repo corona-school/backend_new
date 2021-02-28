@@ -5,17 +5,24 @@ import { ConfigureREST } from '../rest';
 import { ConfigureLogger, logInfo } from '../services/logger';
 import { sendNotification } from '../services/notification';
 import { startNotificationHandler } from '../services/notificationHandler';
+import helmet from 'helmet';
+import hpp from 'hpp';
 const app = express();
 
 ConfigureApollo(app);
 ConfigureREST(app);
 ConfigureLogger();
-startNotificationHandler(10000);
 ConfigureCORS();
+app.use(hpp());
+app.use(helmet());
 
 app.listen(process.env.PORT, () =>
     console.log(`Server listening on port ${process.env.PORT}`)
 );
+
+//Start the persistant notification handler.
+startNotificationHandler(10000);
+
 
 sendNotification('ayushpandey@corona-school.de', {
     Subject: 'Test Message',
