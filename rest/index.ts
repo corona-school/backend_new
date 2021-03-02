@@ -4,33 +4,36 @@ import bcrypt from 'bcrypt';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import { PRIVATE_JWT_KEY } from '../utils/keys';
+import { AuthSchema } from '../utils/AuthValidation';
+
 const prisma = new PrismaClient();
 
 export const ConfigureREST = (app: express.Application): void => {
     const restApi = express.Router();
     restApi.get('/ping', (req, res) => res.send('pong').status(200).end());
 
-    //Registering a User into DB
+    //Registering a user into the database
     restApi.post(
         '/register',
         async (req: Request, res: Response, next: NextFunction) => {
-            const { firstName, lastName, email, password } = req.body;
+            const { firstName, lastName, email } = req.body;
 
-            if (!email || !password) next(new Error('Fields cannot be empty'));
+            //validating the auth request
+            const { error, value } = AuthSchema.validate(req.body);
 
-            if (password.length < 8)
-                next(new Error('Password must be at least 6 characters'));
+            if (error) next(new Error(error?.message));
 
             try {
+                //finding a alreadt exist email in the database
                 const findUser = await prisma.user.findUnique({
                     where: {
-                        email: email,
+                        email: value.email,
                     },
                 });
 
                 if (findUser == null) {
                     bcrypt.genSalt(10, (err, salt) => {
-                        bcrypt.hash(password, salt, async (err, hash) => {
+                        bcrypt.hash(value.password, salt, async (err, hash) => {
                             if (err) throw err;
                             const user = await prisma.user
                                 .create({
@@ -57,7 +60,7 @@ export const ConfigureREST = (app: express.Application): void => {
                     next(new Error('Email already exist'));
                 }
             } catch (error) {
-                next(error);
+                next(new Error(error.message));
             }
         }
     );
@@ -83,10 +86,10 @@ export const ConfigureREST = (app: express.Application): void => {
                             PRIVATE_JWT_KEY,
                             { expiresIn: '3 days' }
                         );
-                        return res.json({ user, token });
+                        return res.json({ token });
                     });
                 } catch (error) {
-                    return next(error);
+                    return next(new Error(error.message));
                 }
             })(req, res, next);
         }
