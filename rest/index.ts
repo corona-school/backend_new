@@ -56,7 +56,9 @@ export const ConfigureREST = (app: express.Application): void => {
                 } else {
                     next(new Error('Email already exist'));
                 }
-            } catch (error) {}
+            } catch (error) {
+                next(error);
+            }
         }
     );
 
@@ -69,7 +71,7 @@ export const ConfigureREST = (app: express.Application): void => {
                     if (err || !user) {
                         return next(new Error('An error occurred'));
                     }
-                    console.log(req.user);
+
                     req.login(user, { session: false }, (err) => {
                         if (err) {
                             res.send(err);

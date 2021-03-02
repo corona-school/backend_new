@@ -67,7 +67,7 @@ passport.use(
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             secretOrKey: PRIVATE_JWT_KEY,
         },
-        async (token: any, done: any) => {
+        async (token, done) => {
             try {
                 return done(null, token.user);
             } catch (error) {
