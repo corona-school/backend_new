@@ -2,11 +2,12 @@ import { ConfigureApollo } from '../apollo';
 import express, { Request, Response, NextFunction } from 'express';
 import { ConfigureREST } from '../rest';
 import '../rest/middleware/auth';
-import passport from 'passport';
+import { ConfigureLogger } from '../services/logger';
 
 const app = express();
 
 app.use(express.json());
+ConfigureLogger();
 ConfigureApollo(app);
 ConfigureREST(app);
 

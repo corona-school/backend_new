@@ -19,41 +19,45 @@ passport.use(
         },
         async (email, password, done) => {
             try {
-                const findUser = await prisma.user.findUnique({
-                    where: {
-                        email,
-                    },
-                    select: {
-                        id: true,
-                        email: true,
-                        firstName: true,
-                        AuthenticationData: {
-                            select: {
-                                password: true,
+                const findUser = await prisma.user
+                    .findUnique({
+                        where: {
+                            email,
+                        },
+                        select: {
+                            id: true,
+                            email: true,
+                            firstName: true,
+                            AuthenticationData: {
+                                select: {
+                                    password: true,
+                                },
                             },
                         },
-                    },
-                });
-
-                if (!findUser) {
-                    return done(null, false, { message: 'User not found' });
-                }
-
-                const isPasswordMatch = await bcrypt.compare(
-                    password,
-                    findUser.AuthenticationData[0].password,
-                    (err, isMatch) => {
-                        if (isMatch) {
-                            return done(null, findUser.id, {
-                                message: 'Logged in Successfully',
+                    })
+                    .then(async (user) => {
+                        if (user == null) {
+                            return done(null, false, {
+                                message: 'User not found',
                             });
                         } else {
-                            return done(null, false, {
-                                message: 'Password not matched',
-                            });
+                            await bcrypt.compare(
+                                password,
+                                user.AuthenticationData[0].password,
+                                (err, isMatch) => {
+                                    if (isMatch) {
+                                        return done(null, user.id, {
+                                            message: 'Logged in Successfully',
+                                        });
+                                    } else {
+                                        return done(null, false, {
+                                            message: 'Password not matched',
+                                        });
+                                    }
+                                }
+                            );
                         }
-                    }
-                );
+                    });
             } catch (error) {
                 done(error);
             }

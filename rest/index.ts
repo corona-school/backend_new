@@ -9,6 +9,7 @@ import {
     email_schema,
     password_schema,
 } from '../utils/authValidation';
+import { logInfo, logError } from '../services/logger';
 
 const prisma = new PrismaClient();
 
@@ -20,6 +21,7 @@ export const ConfigureREST = (app: express.Application): void => {
     restApi.post(
         '/register',
         async (req: Request, res: Response, next: NextFunction) => {
+            logInfo(`Registration begin with params ${req.body}`);
             const { firstName, lastName, email } = req.body;
 
             //validating the auth request
@@ -59,6 +61,9 @@ export const ConfigureREST = (app: express.Application): void => {
                                                     },
                                                 })
                                                 .then((user) => {
+                                                    logInfo(
+                                                        `${user} has been registered`
+                                                    );
                                                     res.send({
                                                         message:
                                                             'User has been registered',
@@ -69,6 +74,7 @@ export const ConfigureREST = (app: express.Application): void => {
                                     );
                                 });
                             } else {
+                                logError(`${user.email} already exist`);
                                 next(new Error('Email already exist'));
                             }
                         })
@@ -87,23 +93,36 @@ export const ConfigureREST = (app: express.Application): void => {
         '/login',
         async (req: Request, res: Response, next: NextFunction) => {
             passport.authenticate('login', async (err, user, info) => {
+                logInfo(`Login route begin for the user ${user}`);
                 try {
-                    if (err || !user) {
+                    if (err) {
                         return next(new Error('An error occurred'));
                     }
 
-                    req.login(user, { session: false }, (err) => {
-                        if (err) {
-                            res.send(err);
-                        }
+                    if (!user) {
+                        logError(`Incorrect Password`);
+                        return next(new Error(info.message));
+                    } else {
+                        logInfo(`Logged in successfully`);
+                        req.login(user, { session: false }, (err) => {
+                            if (err) {
+                                res.send(err);
+                            }
 
-                        const payload = { _id: user._id, email: user.email };
-                        const token = jwt.sign(
-                            { user: payload },
-                            PRIVATE_JWT_KEY
-                        );
-                        return res.json({ token });
-                    });
+                            const payload = {
+                                _id: user._id,
+                                email: user.email,
+                            };
+                            const token = jwt.sign(
+                                { user: payload },
+                                PRIVATE_JWT_KEY
+                            );
+                            logInfo(
+                                `Login token generated for the user ${user}`
+                            );
+                            return res.json({ token });
+                        });
+                    }
                 } catch (error) {
                     return next(new Error(error.message));
                 }
@@ -125,6 +144,8 @@ export const ConfigureREST = (app: express.Application): void => {
             6 - create a link associated with the generated token  
             7 - Send the email to the email user has given 
             */
+
+            logInfo(`Forgot password route begin`);
             const { email } = req.body;
             const { error, value } = email_schema.validate(email);
 
@@ -160,6 +181,7 @@ export const ConfigureREST = (app: express.Application): void => {
                                 '--' +
                                 PRIVATE_JWT_KEY;
 
+                            logInfo(`Forgot password one-time token generated`);
                             const token = jwt.sign(payload, secret, {
                                 expiresIn: '10m',
                                 issuer: 'corona-school',
@@ -179,6 +201,9 @@ export const ConfigureREST = (app: express.Application): void => {
     restApi.post(
         '/reset/:userId/:token',
         async (req: Request, res: Response, next: NextFunction) => {
+            logInfo(
+                `Resetting a password route begin with following request ${req.body} & params ${req.params}`
+            );
             try {
                 const { userId, token } = req.params;
                 const { password } = req.body;
@@ -210,6 +235,9 @@ export const ConfigureREST = (app: express.Application): void => {
                                 const token__ = jwt.verify(token, secret);
 
                                 if (token__) {
+                                    logInfo(
+                                        `Reset token verified for the user ${user}`
+                                    );
                                     return {
                                         user,
                                         isPasswordMatch: bcrypt.compareSync(
@@ -218,6 +246,9 @@ export const ConfigureREST = (app: express.Application): void => {
                                         ),
                                     };
                                 } else if (token__ == '') {
+                                    logError(
+                                        `Reset token invalid for the user ${user}`
+                                    );
                                     next(
                                         new Error('Invalid token/token expires')
                                     );
@@ -225,6 +256,7 @@ export const ConfigureREST = (app: express.Application): void => {
                                     next(new Error('Invalid token'));
                                 }
                             } else {
+                                logError(`User not found`);
                                 next(new Error('User not found'));
                             }
                         })
@@ -250,12 +282,15 @@ export const ConfigureREST = (app: express.Application): void => {
                                                             password: hash,
                                                         },
                                                     })
-                                                    .then((done) =>
+                                                    .then((done) => {
+                                                        logInfo(
+                                                            `User password has been updated`
+                                                        );
                                                         res.json({
                                                             msg:
                                                                 'User password has been updated',
-                                                        })
-                                                    );
+                                                        });
+                                                    });
                                             }
                                         );
                                     });
