@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { ConfigureREST } from '../rest';
 import { ConfigureLogger, logInfo } from '../services/logger';
-import { sendNotification } from '../services/notification';
+import { sendNotification, sendText } from '../services/notification';
 import { startNotificationHandler } from '../services/notificationHandler';
 import helmet from 'helmet';
 import hpp from 'hpp';
@@ -23,11 +23,12 @@ app.listen(process.env.PORT, () =>
 //Start the persistant notification handler.
 startNotificationHandler(10000);
 
-
-sendNotification('ayushpandey@corona-school.de', {
+/*sendNotification('ayush.pandey@corona-school.de', {
     Subject: 'Test Message',
     Message: 'Hello from Mailjet',
 });
+*/
+//sendText('+49017674853265', 'Welcome to Corona school');
 
 /*
 addUser({

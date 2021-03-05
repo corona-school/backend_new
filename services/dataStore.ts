@@ -9,20 +9,55 @@ export async function addUser(details: {
     lastName: string | null;
     email: string;
     notificationLevel: 'all' | 'necessary';
+    phone: string;
 }) {
     return prisma.user.create({ data: details });
 }
 
-export async function getPendingNotifications() {
-    return prisma.notifications.findMany({
+export async function getPendingEmailNotifications() {
+    return prisma.emailNotifications.findMany({
         where: {
             status: 'pending',
         },
     });
 }
 
+export async function getPendingTextNotifications() {
+    return prisma.textNotifications.findMany({
+        where: {
+            status: 'pending',
+        },
+    });
+}
+
+export async function addTextNotification(
+    sender: string,
+    recipient: string,
+    message: string
+) {
+    const user = prisma.user.findUnique({
+        where: {
+            phone: recipient,
+        },
+    });
+    user.then((response) => {
+        if (response !== null) {
+            return prisma.textNotifications.create({
+                data: {
+                    sender: sender,
+                    recipientPhone: recipient,
+                    text: message,
+                },
+            });
+        } else {
+            logError('Text Message recipient ' + recipient + ' does not exist');
+        }
+    });
+}
+
 export async function addNotification(
     recipient: string,
+    sender: string,
     content: { Subject: string; Message: string; HTMLContent?: string }
 ) {
     if (content.HTMLContent === undefined) {
@@ -36,9 +71,10 @@ export async function addNotification(
 
     user.then((response) => {
         if (response !== null) {
-            return prisma.notifications.create({
+            return prisma.emailNotifications.create({
                 data: {
                     recipientEmail: recipient,
+                    sender: sender,
                     subject: content.Subject,
                     textContent: content.Message,
                     htmlContent: content.HTMLContent,
@@ -50,8 +86,8 @@ export async function addNotification(
     });
 }
 
-export async function markNotification(notificationId: string) {
-    return prisma.notifications.update({
+export async function markEmailNotification(notificationId: string) {
+    return prisma.emailNotifications.update({
         where: {
             id: notificationId,
         },

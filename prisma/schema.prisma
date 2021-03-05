@@ -15,6 +15,7 @@ model User {
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @default(now())
     email       String      @unique
+    phone       String      @unique
     active      Boolean     @default(false)
     notificationLevel NotificationLevel @default(all)
     firstName   String
@@ -75,9 +76,9 @@ model RequestMatches {
     volunteerReqId  String
 }
 
-model Notifications {
+model EmailNotifications {
     id              String          @id @default(cuid())
-    sender          String          @default("ayush.pandey@corona-school.de")
+    sender          String
     recipient       User            @relation(fields:[recipientEmail],references:[email])
     recipientEmail  String
     subject         String
@@ -86,7 +87,14 @@ model Notifications {
     status          NotificationStatus @default(pending)
 }
 
-
+model TextNotifications{
+    id              String          @id @default(cuid())
+    recipient       User            @relation(fields:[recipientPhone],references:[phone])
+    recipientPhone  String
+    sender          String
+    text            String
+    status          NotificationStatus @default(pending)
+}
 enum NotificationLevel {
     necessary
     all

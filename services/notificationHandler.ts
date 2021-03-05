@@ -1,18 +1,26 @@
-import { getPendingNotifications, markNotification } from './dataStore';
+import {
+    getPendingEmailNotifications,
+    getPendingTextNotifications,
+    markEmailNotification,
+} from './dataStore';
 import { logError, logInfo } from './logger';
 import mailjet from 'node-mailjet';
 
-let mailjetAPI: mailjet.Email.Client;
+let mailjetEmailAPI: mailjet.Email.Client;
+let mailjetTextAPI: mailjet.SMS.Client;
 if (
     process.env.MAILJET_API === undefined ||
-    process.env.MAILJET_SECRET === undefined
+    process.env.MAILJET_SECRET === undefined ||
+    process.env.MAILJET_SMS_API === undefined
 ) {
     logError('Mailjet API not configured properly');
 } else {
-    mailjetAPI = mailjet.connect(
+    mailjetEmailAPI = mailjet.connect(
         process.env.MAILJET_API,
         process.env.MAILJET_SECRET
     );
+
+    //mailjetTextAPI = mailjet.connect(process.env.MAILJET_SMS_API);
 }
 
 export const startNotificationHandler = (interval: number) => {
@@ -20,8 +28,8 @@ export const startNotificationHandler = (interval: number) => {
     setInterval(notificationHandler, interval);
 };
 
-function notificationHandler() {
-    getPendingNotifications().then((notifications) => {
+function notificationHandler(action: string) {
+    getPendingEmailNotifications().then((notifications) => {
         notifications.forEach(
             (notification: {
                 id: string;
@@ -32,12 +40,12 @@ function notificationHandler() {
                 htmlContent: string | null;
                 subject: string;
             }) => {
-                mailjetAPI.post('send', { version: 'v3.1' }).request({
+                mailjetEmailAPI.post('send', { version: 'v3.1' }).request({
                     Messages: [
                         {
                             From: {
-                                Email: process.env.SENDER_EMAIL,
-                                Name: process.env.SENDER_NAME,
+                                Email: notification.sender,
+                                Name: 'Corona School - Notification',
                             },
                             To: [
                                 {
@@ -52,9 +60,28 @@ function notificationHandler() {
                         },
                     ],
                 });
-                markNotification(notification.id).then((response) =>
+                markEmailNotification(notification.id).then((_response) =>
                     logInfo('Mark notification ' + notification.id + ' sent')
                 );
+            }
+        );
+    });
+
+    getPendingTextNotifications().then((notifications) => {
+        notifications.forEach(
+            (notification: {
+                id: string;
+                sender: string;
+                status: string;
+                recipientPhone: string;
+                text: string;
+            }) => {
+                console.log('Send SMS');
+                mailjetEmailAPI.post('sms-send', { version: 'v4' }).request({
+                    Text: notification.text,
+                    To: notification.recipientPhone,
+                    From: notification.sender,
+                });
             }
         );
     });
