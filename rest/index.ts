@@ -4,8 +4,11 @@ import bcrypt from 'bcrypt';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import { PRIVATE_JWT_KEY } from '../utils/keys';
-import { AuthSchema } from '../utils/AuthValidation';
-import Joi from 'joi';
+import {
+    AuthSchema,
+    email_schema,
+    password_schema,
+} from '../utils/authValidation';
 
 const prisma = new PrismaClient();
 
@@ -22,46 +25,59 @@ export const ConfigureREST = (app: express.Application): void => {
             //validating the auth request
             const { error, value } = AuthSchema.validate(req.body);
 
-            if (error) next(new Error(error?.message));
-
-            try {
-                //finding a alreadt exist email in the database
-                const findUser = await prisma.user.findUnique({
-                    where: {
-                        email: value.email,
-                    },
-                });
-
-                if (findUser == null) {
-                    bcrypt.genSalt(10, (err, salt) => {
-                        bcrypt.hash(value.password, salt, async (err, hash) => {
-                            if (err) throw err;
-                            const user = await prisma.user
-                                .create({
-                                    data: {
-                                        firstName,
-                                        lastName,
-                                        email,
-                                        AuthenticationData: {
-                                            create: {
-                                                password: hash,
-                                            },
-                                        },
-                                    },
-                                })
-                                .then((user) => {
-                                    res.send({
-                                        message: 'User has been registered',
-                                    });
-                                    //res.redirect('./login');
-                                });
-                        });
-                    });
-                } else {
-                    next(new Error('Email already exist'));
-                }
-            } catch (error) {
+            if (error) {
                 next(new Error(error.message));
+            } else {
+                try {
+                    //finding a alreadt exist email in the database
+                    const findUser = await prisma.user
+                        .findUnique({
+                            where: {
+                                email: value.email,
+                            },
+                        })
+                        .then((user) => {
+                            if (user == null) {
+                                bcrypt.genSalt(10, (err, salt) => {
+                                    bcrypt.hash(
+                                        value.password,
+                                        salt,
+                                        async (err, hash) => {
+                                            if (err) throw err;
+
+                                            await prisma.user
+                                                .create({
+                                                    data: {
+                                                        firstName,
+                                                        lastName,
+                                                        email,
+                                                        AuthenticationData: {
+                                                            create: {
+                                                                password: hash,
+                                                            },
+                                                        },
+                                                    },
+                                                })
+                                                .then((user) => {
+                                                    res.send({
+                                                        message:
+                                                            'User has been registered',
+                                                    });
+                                                    //res.redirect('./login');
+                                                });
+                                        }
+                                    );
+                                });
+                            } else {
+                                next(new Error('Email already exist'));
+                            }
+                        })
+                        .catch((err) => {
+                            next(new Error(err.message));
+                        });
+                } catch (error) {
+                    next(new Error(error.message));
+                }
             }
         }
     );
@@ -103,42 +119,60 @@ export const ConfigureREST = (app: express.Application): void => {
             1 - Get email of the user
             2 - Create a token
             3 - Find the user with email in the DB
-            4 - Save the user id:token in the token table to later verify it
-            5 - Make the life of token not more than 5 minutes
+            4 - Make the token with previous password hash, so after user change password
+                token will no longer be valid
+            5 - Make the life of token not more than 10 minutes
             6 - create a link associated with the generated token  
             7 - Send the email to the email user has given 
             */
-
             const { email } = req.body;
+            const { error, value } = email_schema.validate(email);
 
-            const getUser = await prisma.user.findUnique({
-                where: {
-                    email: email,
-                },
-                select: {
-                    id: true,
-                    email: true,
-                    AuthenticationData: {
-                        select: {
-                            password: true,
+            if (error) {
+                next(new Error(error.message));
+            } else {
+                await prisma.user
+                    .findUnique({
+                        where: {
+                            email: value,
                         },
-                    },
-                },
-            });
+                        select: {
+                            id: true,
+                            email: true,
+                            AuthenticationData: {
+                                select: {
+                                    password: true,
+                                },
+                            },
+                        },
+                    })
+                    .then((user) => {
+                        if (user == null) {
+                            next(new Error('Email not registered'));
+                        } else {
+                            const payload = {
+                                id: user.id,
+                                email: user.email,
+                            };
 
-            if (!getUser) next(new Error('User not found'));
+                            const secret =
+                                user.AuthenticationData[0].password +
+                                '--' +
+                                PRIVATE_JWT_KEY;
 
-            const payload = {
-                id: getUser?.id,
-                email: getUser?.email,
-            };
+                            const token = jwt.sign(payload, secret, {
+                                expiresIn: '10m',
+                                issuer: 'corona-school',
+                            });
 
-            const secret =
-                getUser?.AuthenticationData[0].password +
-                '--' +
-                PRIVATE_JWT_KEY;
-
-            jwt.sign(payload, secret);
+                            //Send email to the user
+                            //SendTokenViaEmail(user.id,token,recipient): void
+                        }
+                    })
+                    .catch((err) => {
+                        next(new Error(err.message));
+                    });
+            }
         }
     );
 
@@ -148,87 +182,96 @@ export const ConfigureREST = (app: express.Application): void => {
             try {
                 const { userId, token } = req.params;
                 const { password } = req.body;
+                const { error, value } = password_schema.validate(password);
 
-                await prisma.user
-                    .findUnique({
-                        where: {
-                            id: userId,
-                        },
-                        include: {
-                            AuthenticationData: {
-                                select: {
-                                    id: true,
-                                    password: true,
+                if (error) {
+                    next(new Error(error.message));
+                } else {
+                    await prisma.user
+                        .findUnique({
+                            where: {
+                                id: userId,
+                            },
+                            include: {
+                                AuthenticationData: {
+                                    select: {
+                                        id: true,
+                                        password: true,
+                                    },
                                 },
                             },
-                        },
-                    })
-                    .then((user) => {
-                        if (user != null) {
-                            const secret =
-                                user.AuthenticationData[0].password +
-                                '--' +
-                                PRIVATE_JWT_KEY;
-                            const token__ = jwt.verify(token, secret);
+                        })
+                        .then((user) => {
+                            if (user != null) {
+                                const secret =
+                                    user.AuthenticationData[0].password +
+                                    '--' +
+                                    PRIVATE_JWT_KEY;
+                                const token__ = jwt.verify(token, secret);
 
-                            if (token__) {
-                                return {
-                                    user,
-                                    isPasswordMatch: bcrypt.compareSync(
-                                        password,
-                                        user.AuthenticationData[0].password
-                                    ),
-                                };
-                            } else if (token__ == '') {
-                                next(new Error('Invalid token/token expires'));
+                                if (token__) {
+                                    return {
+                                        user,
+                                        isPasswordMatch: bcrypt.compareSync(
+                                            value,
+                                            user.AuthenticationData[0].password
+                                        ),
+                                    };
+                                } else if (token__ == '') {
+                                    next(
+                                        new Error('Invalid token/token expires')
+                                    );
+                                } else {
+                                    next(new Error('Invalid token'));
+                                }
                             } else {
-                                next(new Error('Invalid token'));
+                                next(new Error('User not found'));
                             }
-                        } else {
-                            next(new Error('User not found'));
-                        }
-                    })
-                    .then(async (obj) => {
-                        if (!obj?.isPasswordMatch) {
-                            await bcrypt.genSalt(10, (err, salt) => {
-                                return bcrypt.hash(
-                                    password,
-                                    salt,
-                                    async (err, hash) => {
-                                        if (err) throw err;
+                        })
+                        .then(async (obj) => {
+                            if (obj) {
+                                if (!obj.isPasswordMatch) {
+                                    await bcrypt.genSalt(10, (err, salt) => {
+                                        return bcrypt.hash(
+                                            value,
+                                            salt,
+                                            async (err, hash) => {
+                                                if (err) throw err;
 
-                                        await prisma.authenticationData
-                                            .update({
-                                                where: {
-                                                    id:
-                                                        obj?.user
-                                                            .AuthenticationData[0]
-                                                            .id,
-                                                },
-                                                data: {
-                                                    password: hash,
-                                                },
-                                            })
-                                            .then((done) =>
-                                                res.json({
-                                                    msg:
-                                                        'User password has been updated',
-                                                })
-                                            );
-                                    }
-                                );
-                            });
-                        } else {
-                            next(
-                                new Error(
-                                    'New password cannot be an old password'
-                                )
-                            );
-                        }
-                    })
-                    .catch((err) => {
-                        next(new Error('Invalid token/token expires'));
-                    });
+                                                await prisma.authenticationData
+                                                    .update({
+                                                        where: {
+                                                            id:
+                                                                obj.user
+                                                                    .AuthenticationData[0]
+                                                                    .id,
+                                                        },
+                                                        data: {
+                                                            password: hash,
+                                                        },
+                                                    })
+                                                    .then((done) =>
+                                                        res.json({
+                                                            msg:
+                                                                'User password has been updated',
+                                                        })
+                                                    );
+                                            }
+                                        );
+                                    });
+                                } else {
+                                    next(
+                                        new Error(
+                                            'New password cannot be an old password'
+                                        )
+                                    );
+                                }
+                            }
+                        })
+                        .catch((err) => {
+                            next(new Error('Invalid token/token expires'));
+                        });
+                }
             } catch (error) {
                 next(new Error(error.message));
             }
