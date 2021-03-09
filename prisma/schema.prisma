@@ -11,62 +11,96 @@ generator client {
 }
 
 model User {
-    id          String      @id @default(cuid())
-    createdAt   DateTime    @default(now())
-    updatedAt   DateTime    @default(now())
-    email       String      @unique
-    firstName   String
-    lastName    String?
+  id                 String               @id @default(cuid())
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @default(now())
+  email              String               @unique
+  emailVerified      Boolean              @default(false)
+  phoneNumber        String               
+  phoneNumberVerified Boolean             @default(false)
+  firstName          String
+  lastName           String?
+  active             Boolean              @default(false)
+  notificationLevel  NotificationLevel    @default(all)
+  Pupil              Pupil[]
+  Volunteer          Volunteer[]
+  AuthenticationData AuthenticationData[]
+  Notifications      Notifications[]
 }
 
 model Pupil {
-    id          String      @id @default(cuid())
-    user        User        @relation(fields:[userId],references:[id])
-    userId      String
+  id                String              @id @default(cuid())
+  user              User                @relation(fields: [userId], references: [id])
+  userId            String
+  PupilMatchRequest PupilMatchRequest[]
 }
 
 model Volunteer {
-    id          String      @id @default(cuid())
-    user        User        @relation(fields:[userId],references:[id])
-    userId      String
-    offers      Offer[]
+  id                    String                  @id @default(cuid())
+  user                  User                    @relation(fields: [userId], references: [id])
+  userId                String
+  offers                Offer[]
+  VolunteerMatchRequest VolunteerMatchRequest[]
 }
 
 model Offer {
-    id          String      @id @default(cuid())
-    createdAt   DateTime    @default(now())
-    updatedAt   DateTime    @default(now())
-    volunteer   Volunteer   @relation(fields:[volunteerId],references:[id])
-    volunteerId String
-    description String
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+  volunteer   Volunteer @relation(fields: [volunteerId], references: [id])
+  volunteerId String
+  description String
 }
 
 model AuthenticationData {
-    id          String      @id @default(cuid())
-    user        User        @relation(fields:[userId],references:[id])
-    userId      String
-    password    String
+  id       String @id @default(cuid())
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String
+  password String
 }
 
-
 model PupilMatchRequest {
-    id          String      @id @default(cuid())
-    user        Pupil       @relation(fields:[requestor],references:[id])
-    requestor   String
-    parameters  String[]
+  id             String           @id @default(cuid())
+  user           Pupil            @relation(fields: [requestor], references: [id])
+  requestor      String
+  parameters     String[]
+  RequestMatches RequestMatches[]
 }
 
 model VolunteerMatchRequest {
-    id          String      @id @default(cuid())
-    user        Volunteer   @relation(fields:[requestor],references:[id])
-    requestor   String
-    parameters  String[]
+  id             String           @id @default(cuid())
+  user           Volunteer        @relation(fields: [requestor], references: [id])
+  requestor      String
+  parameters     String[]
+  RequestMatches RequestMatches[]
 }
 
 model RequestMatches {
-    id              String          @id @default(cuid())
-    pupilReq        PupilMatchRequest    @relation(fields:[pupilReqId],references:[id])
-    volunteerReq    VolunteerMatchRequest    @relation(fields:[volunteerReqId],references:[id])
-    pupilReqId      String
-    volunteerReqId  String
+  id             String                @id @default(cuid())
+  pupilReq       PupilMatchRequest     @relation(fields: [pupilReqId], references: [id])
+  volunteerReq   VolunteerMatchRequest @relation(fields: [volunteerReqId], references: [id])
+  pupilReqId     String
+  volunteerReqId String
+}
+
+model Notifications {
+  id             String             @id @default(cuid())
+  sender         String             @default("farrukh.faizy@corona-school.de")
+  recipient      User               @relation(fields: [recipientEmail], references: [email])
+  recipientEmail String
+  subject        String
+  textContent    String?
+  htmlContent    String?
+  status         NotificationStatus @default(pending)
+}
+
+enum NotificationLevel {
+  necessary
+  all
+}
+
+enum NotificationStatus {
+  sent
+  error
+  pending
 }
