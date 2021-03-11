@@ -5,6 +5,8 @@ import '../rest/middleware/auth';
 import { ConfigureLogger } from '../services/logger';
 import { sendNotification } from '../services/notification';
 import { startNotificationHandler } from '../services/notificationHandler';
+import { authentication } from '../rest/routes/authentication';
+import { ResetPassword } from '../rest/routes/resetPassword';
 
 const app = express();
 
@@ -17,6 +19,8 @@ app.use(express.json());
 ConfigureLogger();
 ConfigureApollo(app);
 ConfigureREST(app);
+authentication(app);
+ResetPassword(app);
 //startNotificationHandler(10000);
 
 app.use((req, res, next) => {

@@ -2,8 +2,8 @@ import passport from 'passport';
 import passportLocal from 'passport-local';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import { PRIVATE_JWT_KEY } from '../../utils/keys';
 import passportJwt from 'passport-jwt';
+import { keys } from '../../utils/secretKeys';
 
 const prisma = new PrismaClient();
 const localStrategy = passportLocal.Strategy;
@@ -19,7 +19,7 @@ passport.use(
         },
         async (email, password, done) => {
             try {
-                const findUser = await prisma.user
+                await prisma.user
                     .findUnique({
                         where: {
                             email,
@@ -46,7 +46,7 @@ passport.use(
                                 user.AuthenticationData[0].password,
                                 (err, isMatch) => {
                                     if (isMatch) {
-                                        return done(null, user.id, {
+                                        return done(null, user, {
                                             message: 'Logged in Successfully',
                                         });
                                     } else {
@@ -69,11 +69,11 @@ passport.use(
     new JwtStrategy(
         {
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            secretOrKey: PRIVATE_JWT_KEY,
+            secretOrKey: keys.accessTokenKey,
         },
-        async (token, done) => {
+        async (payload, done) => {
             try {
-                return done(null, token.user);
+                return done(null, payload);
             } catch (error) {
                 done(error);
             }

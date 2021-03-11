@@ -11,21 +11,21 @@ generator client {
 }
 
 model User {
-  id                 String               @id @default(cuid())
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @default(now())
-  email              String               @unique
-  emailVerified      Boolean              @default(false)
-  phoneNumber        String               
-  phoneNumberVerified Boolean             @default(false)
-  firstName          String
-  lastName           String?
-  active             Boolean              @default(false)
-  notificationLevel  NotificationLevel    @default(all)
-  Pupil              Pupil[]
-  Volunteer          Volunteer[]
-  AuthenticationData AuthenticationData[]
-  Notifications      Notifications[]
+  id                  String               @id @default(cuid())
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @default(now())
+  email               String               @unique
+  emailVerified       Boolean              @default(false)
+  phoneNumber         String?
+  phoneNumberVerified Boolean              @default(false)
+  firstName           String
+  lastName            String?
+  active              Boolean              @default(false)
+  notificationLevel   NotificationLevel    @default(all)
+  Pupil               Pupil[]
+  Volunteer           Volunteer[]
+  AuthenticationData  AuthenticationData[]
+  Notifications       Notifications[]
 }
 
 model Pupil {
