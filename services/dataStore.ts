@@ -73,6 +73,7 @@ export async function addNotification(
         if (response !== null) {
             return prisma.emailNotifications.create({
                 data: {
+                    recipientName: response.firstName,
                     recipientEmail: recipient,
                     sender: sender,
                     subject: content.Subject,
@@ -83,16 +84,35 @@ export async function addNotification(
         } else {
             logError('Mail recipient ' + recipient + ' does not exist');
         }
+    }).catch((err) => {
+        logError('Unable to fetch data from the database. Error:: ' + err);
     });
 }
 
-export async function markEmailNotification(notificationId: string) {
+export async function markEmailNotification(
+    notificationId: string,
+    status: 'sent' | 'error'
+) {
     return prisma.emailNotifications.update({
         where: {
             id: notificationId,
         },
         data: {
-            status: 'sent',
+            status: status,
+        },
+    });
+}
+
+export async function markTextNotification(
+    notificationId: string,
+    status: 'sent' | 'error'
+) {
+    return prisma.textNotifications.update({
+        where: {
+            id: notificationId,
+        },
+        data: {
+            status: status,
         },
     });
 }

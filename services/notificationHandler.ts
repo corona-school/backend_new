@@ -2,6 +2,7 @@ import {
     getPendingEmailNotifications,
     getPendingTextNotifications,
     markEmailNotification,
+    markTextNotification,
 } from './dataStore';
 import { logError, logInfo } from './logger';
 import mailjet from 'node-mailjet';
@@ -20,7 +21,11 @@ if (
         process.env.MAILJET_SECRET
     );
 
-    //mailjetTextAPI = mailjet.connect(process.env.MAILJET_SMS_API);
+    mailjetTextAPI = mailjet.connect(process.env.MAILJET_SMS_API, {
+        url: 'api.mailjet.com', // default is the API url
+        version: 'v4', // default is '/v3'
+        perform_api_call: true, // used for tests. default is true
+    });
 }
 
 export const startNotificationHandler = (interval: number) => {
@@ -40,49 +45,79 @@ function notificationHandler(action: string) {
                 htmlContent: string | null;
                 subject: string;
             }) => {
-                mailjetEmailAPI.post('send', { version: 'v3.1' }).request({
-                    Messages: [
-                        {
-                            From: {
-                                Email: notification.sender,
-                                Name: 'Corona School - Notification',
-                            },
-                            To: [
-                                {
-                                    Email: notification.recipientEmail,
-                                    Name: 'Ayush',
+                const sendEmail = mailjetEmailAPI
+                    .post('send', { version: 'v3.1' })
+                    .request({
+                        Messages: [
+                            {
+                                From: {
+                                    Email: notification.sender,
+                                    Name: 'Corona School - Notification',
                                 },
-                            ],
-                            Subject: notification.subject,
-                            TextPart: notification.textContent,
-                            HTMLPart: notification.htmlContent,
-                            CustomID: notification.id,
-                        },
-                    ],
-                });
-                markEmailNotification(notification.id).then((_response) =>
-                    logInfo('Mark notification ' + notification.id + ' sent')
-                );
+                                To: [
+                                    {
+                                        Email: notification.recipientEmail,
+                                        Name: 'Ayush',
+                                    },
+                                ],
+                                Subject: notification.subject,
+                                TextPart: notification.textContent,
+                                HTMLPart: notification.htmlContent,
+                                CustomID: notification.id,
+                            },
+                        ],
+                    });
+                sendEmail
+                    .then((_response) => {
+                        markEmailNotification(notification.id, 'sent');
+                    })
+                    .catch((err) => {
+                        markEmailNotification(notification.id, 'error');
+                        logError(
+                            'Email ' +
+                                notification.id +
+                                ' Count not be sent, Error:: ' +
+                                err
+                        );
+                    });
             }
         );
     });
 
-    getPendingTextNotifications().then((notifications) => {
-        notifications.forEach(
-            (notification: {
-                id: string;
-                sender: string;
-                status: string;
-                recipientPhone: string;
-                text: string;
-            }) => {
-                console.log('Send SMS');
-                mailjetEmailAPI.post('sms-send', { version: 'v4' }).request({
-                    Text: notification.text,
-                    To: notification.recipientPhone,
-                    From: notification.sender,
-                });
-            }
-        );
-    });
+    getPendingTextNotifications()
+        .then((notifications) => {
+            notifications.forEach(
+                (notification: {
+                    id: string;
+                    sender: string;
+                    status: string;
+                    recipientPhone: string;
+                    text: string;
+                }) => {
+                    const sendText = mailjetTextAPI.post('sms-send').request({
+                        Text: notification.text,
+                        To: notification.recipientPhone,
+                        From: notification.sender,
+                    });
+                    sendText
+                        .then((_response) => {
+                            markTextNotification(notification.id, 'sent');
+                        })
+                        .catch((err) => {
+                            markTextNotification(notification.id, 'error');
+                            logError(
+                                'Text ' +
+                                    notification.id +
+                                    ' Count not be sent, Error:: ' +
+                                    err
+                            );
+                        });
+                }
+            );
+        })
+        .catch((err) => {
+            logError(
+                'Problem getting messages from the database. Error:: ' + err
+            );
+        });
 }

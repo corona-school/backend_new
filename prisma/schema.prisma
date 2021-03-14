@@ -81,6 +81,7 @@ model EmailNotifications {
     sender          String
     recipient       User            @relation(fields:[recipientEmail],references:[email])
     recipientEmail  String
+    recipientName   String
     subject         String
     textContent     String?
     htmlContent     String?
