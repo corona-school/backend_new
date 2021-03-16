@@ -1,16 +1,14 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { logError, logInfo } from '../../services/logger';
-import {
-    forgotSchema,
-    resetPasswordSchema,
-} from '../../utils/validationSchema';
+import { emailSchema, resetPasswordSchema } from '../../utils/validationSchema';
 import bcrypt from 'bcrypt';
 import passport from 'passport';
-import { signForgotToken } from '../../utils/jwt_signature';
 import jwt from 'jsonwebtoken';
-import { sendResetNotification } from '../../services/notification';
+
 import { keys } from '../../utils/secretKeys';
+import { generatePasswordLink } from '../../utils/helpers';
+import { sendNotification } from '../../services/notification';
 
 const prisma = new PrismaClient();
 
@@ -19,12 +17,12 @@ export const ResetPassword = (app: express.Application): void => {
     forgotApi.get('/ping', (req, res) => res.send('pong').status(200).end());
 
     forgotApi.post(
-        '/forgot',
+        '/',
         passport.authenticate('jwt', { session: false }),
         async (req: Request, res: Response, next: NextFunction) => {
             logInfo(`Forgot password route begin`);
 
-            const { error, value } = forgotSchema.validate(
+            const { error, value } = emailSchema.validate(
                 req.body,
                 _validationOptions
             );
@@ -54,30 +52,30 @@ export const ResetPassword = (app: express.Application): void => {
                         if (user == null) {
                             next(new Error('Email not registered'));
                         } else {
-                            const secret = `${user.AuthenticationData[0].password}${keys.accessTokenKey}`;
+                            logInfo(`Forgot password one-time token generated`);
 
-                            const forgotToken = signForgotToken(
-                                user.id,
-                                secret
+                            const passwordResetlink = generatePasswordLink(
+                                user
                             );
 
-                            const link = `https://localhost:4001/forgot-password/${user.id}/${forgotToken}`;
+                            logInfo(
+                                `Email link is created ${passwordResetlink}`
+                            );
 
-                            logInfo(`Forgot password one-time token generated`);
-                            logInfo(`Email link is created ${link}`);
+                            sendNotification(
+                                user.email,
 
-                            // sendResetNotification(
-                            //     {
-                            //         email: user.email,
-                            //         firstName: user.firstName,
-                            //     },
-                            //     {
-                            //         Subject: 'Reset password',
-                            //         Message: `Hello ${user.firstName} Here is your one-time token for your password reset${link}`,
-                            //     }
-                            // );
+                                {
+                                    Subject: 'Reset your password',
+                                    Message: `Dear ${user.firstName},
+                                    Please click the following ${passwordResetlink} link to rest your account password`,
+                                    HTMLContent: `<h3>Dear ${user.firstName},</br> 
+                                    Please click the following <a href=\"https://${passwordResetlink}/\">reset link to reset your account password</a>!</h3><br /><h5>Best regards,
+                                    Team corona-school</h5!`,
+                                }
+                            );
 
-                            return res.json({ link });
+                            return res.json({ passwordResetlink });
                         }
                     })
                     .catch((err) => {
@@ -88,7 +86,7 @@ export const ResetPassword = (app: express.Application): void => {
     );
 
     forgotApi.post(
-        '/:userId/:token',
+        '/verify/:userId/:token',
         async (req: Request, res: Response, next: NextFunction) => {
             logInfo(
                 `Reset password route begin with following params ${req.params}`

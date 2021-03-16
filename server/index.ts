@@ -3,10 +3,13 @@ import express, { Request, Response, NextFunction } from 'express';
 import { ConfigureREST } from '../rest';
 import '../rest/middleware/auth';
 import { ConfigureLogger } from '../services/logger';
-import { sendNotification } from '../services/notification';
+import { sendNotification, sendText } from '../services/notification';
 import { startNotificationHandler } from '../services/notificationHandler';
 import { authentication } from '../rest/routes/authentication';
 import { ResetPassword } from '../rest/routes/resetPassword';
+import { refreshToken } from '../rest/routes/refreshToken';
+import { emailsVerification } from '../rest/routes/verifyEmail';
+import { PhoneVerification } from '../rest/routes/verifyPhone';
 
 const app = express();
 
@@ -21,7 +24,11 @@ ConfigureApollo(app);
 ConfigureREST(app);
 authentication(app);
 ResetPassword(app);
-//startNotificationHandler(10000);
+refreshToken(app);
+emailsVerification(app);
+PhoneVerification(app);
+
+startNotificationHandler(10000);
 
 app.use((req, res, next) => {
     const err = new Error('Not found');

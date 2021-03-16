@@ -6,6 +6,12 @@ import bcrypt from 'bcrypt';
 import passport from 'passport';
 import { signAccessToken, signRefreshToken } from '../../utils/jwt_signature';
 import { keys } from '../../utils/secretKeys';
+import {
+    addRefreshToken,
+    generateEmailLink,
+    isRefreshTokenValid,
+} from '../../utils/helpers';
+import { sendNotification } from '../../services/notification';
 
 const prisma = new PrismaClient();
 
@@ -61,6 +67,25 @@ export const authentication = (app: express.Application): void => {
                                                     logInfo(
                                                         `${user.email} has been registered`
                                                     );
+
+                                                    const emailLink = generateEmailLink(
+                                                        user
+                                                    );
+
+                                                    sendNotification(
+                                                        user.email,
+
+                                                        {
+                                                            Subject:
+                                                                'Verify your email address',
+                                                            Message: `Dear ${user.firstName},
+                                                            Please verify your email address ${emailLink}`,
+                                                            HTMLContent: `<h3>Dear ${user.firstName},</br> 
+                                                            Please verify your email address using the following <a href=\"https://${emailLink}/\">link</a>!</h3><br /><h5>Best regards,
+                                                            Team corona-school</h5!`,
+                                                        }
+                                                    );
+
                                                     res.send({
                                                         message:
                                                             'User has been registered',
@@ -117,10 +142,48 @@ export const authentication = (app: express.Application): void => {
                                 keys.refreshTokenKey
                             );
 
+                            isRefreshTokenValid(user.id)
+                                .then((data) => {
+                                    if (data != null) {
+                                        // returns empty array if login first time
+                                        if (data.RefreshToken.length === 0) {
+                                            // check if arr.length == 0 , if yes add a token in connection with userid
+                                            return addRefreshToken(
+                                                user.id,
+                                                refreshToken
+                                            );
+                                        } else {
+                                            // if its a second login, check the true token in DB
+                                            logInfo(
+                                                'Current refresh token is still valid'
+                                            );
+                                            res.send({
+                                                message:
+                                                    'Current refresh token is still valid',
+                                                accessToken,
+                                            });
+                                        }
+                                    }
+                                })
+                                .then((response) => {
+                                    // getting the addRefreshToken response
+                                    if (response != null) {
+                                        const userId = response.userId;
+                                        const valid = response.valid;
+                                        res.json({
+                                            message:
+                                                'Refresh token added in database',
+                                            userId,
+                                            valid,
+                                            accessToken,
+                                            refreshToken,
+                                        });
+                                    }
+                                });
+
                             logInfo(
                                 `Login token generated for the user ${user.id}`
                             );
-                            return res.json({ accessToken, refreshToken });
                         });
                     }
                 } catch (error) {

@@ -20,7 +20,7 @@ export const signRefreshToken = (userid: string, key: string) => {
     };
 
     const options = {
-        expiresIn: '1y',
+        expiresIn: '30 days',
         issuer: 'corona-school',
         audience: userid,
     };
@@ -34,7 +34,21 @@ export const signForgotToken = (userid: string, key: string) => {
     };
 
     const options = {
-        expiresIn: '10m',
+        expiresIn: '5m',
+        issuer: 'corona-school',
+        audience: userid,
+    };
+
+    return jwt.sign({ userid: payload }, key, options);
+};
+
+export const generateOnetimeToken = (userid: string, key: string) => {
+    const payload = {
+        _id: userid,
+    };
+
+    const options = {
+        expiresIn: '5 days',
         issuer: 'corona-school',
         audience: userid,
     };

@@ -7,7 +7,7 @@ export const resetPasswordSchema = Joi.object({
         .required(),
 });
 
-export const forgotSchema = Joi.object({
+export const emailSchema = Joi.object({
     email: Joi.string().email().required(),
 });
 
