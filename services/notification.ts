@@ -17,5 +17,5 @@ export const sendNotification = (
 };
 
 export const sendText = (recipient: string, message: string): void => {
-    addTextNotification(recipient, message, DEFAULTSENDERS.sms);
+    addTextNotification(DEFAULTSENDERS.sms, recipient, message);
 };

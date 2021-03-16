@@ -1,16 +1,5 @@
-[2021-03-14T13:53:41.215] [INFO] default - Started Notification Handler
-[2021-03-14T13:53:51.815] [INFO] default - Mark notification cklwh8wnj0002o2s4h4yx5i8u sent
-[2021-03-14T13:55:33.377] [INFO] default - Started Notification Handler
-[2021-03-14T13:55:43.993] [INFO] default - Mark notification cklwh8wnj0002o2s4h4yx5i8u sent
-[2021-03-14T14:01:37.690] [INFO] default - Started Notification Handler
-[2021-03-14T14:02:38.022] [INFO] default - Started Notification Handler
-[2021-03-14T14:04:27.563] [INFO] default - Started Notification Handler
-[2021-03-14T14:04:52.963] [INFO] default - Started Notification Handler
-[2021-03-14T14:07:07.649] [INFO] default - Started Notification Handler
-[2021-03-14T14:22:15.559] [INFO] default - Started Notification Handler
-[2021-03-14T14:22:36.682] [INFO] default - Started Notification Handler
-[2021-03-14T14:22:37.158] [ERROR] default - Mail recipient ayush.pandey@corona-school.de does not exist
-[2021-03-14T14:23:05.169] [INFO] default - Started Notification Handler
-[2021-03-14T14:23:24.126] [INFO] default - Started Notification Handler
-[2021-03-14T14:26:08.692] [INFO] default - Started Notification Handler
-[2021-03-14T14:30:27.861] [INFO] default - Started Notification Handler
+[2021-03-16T19:59:14.188] [INFO] default - Started Notification Handler
+[2021-03-16T19:59:14.957] [ERROR] default - Text Message recipient Welcome to Corona school does not exist
+[2021-03-16T19:59:50.294] [INFO] default - Started Notification Handler
+[2021-03-16T19:59:50.667] [ERROR] default - Text Message recipient Welcome to Corona school does not exist
+[2021-03-16T20:01:39.113] [INFO] default - Started Notification Handler

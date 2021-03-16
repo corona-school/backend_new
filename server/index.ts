@@ -28,7 +28,7 @@ startNotificationHandler(10000);
     Message: 'Hello from Mailjet',
 });
 */
-//sendText('+49017674853265', 'Welcome to Corona school');
+//sendText('+4917687984735', 'Welcome to Corona school');
 
 /*
 addUser({
