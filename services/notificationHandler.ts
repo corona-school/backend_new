@@ -22,9 +22,9 @@ if (
     );
 
     mailjetTextAPI = mailjet.connect(process.env.MAILJET_SMS_API, {
-        url: 'api.mailjet.com', // default is the API url
-        version: 'v4', // default is '/v3'
-        perform_api_call: true, // used for tests. default is true
+        url: 'api.mailjet.com',
+        version: 'v4',
+        perform_api_call: true,
     });
 }
 
@@ -33,7 +33,7 @@ export const startNotificationHandler = (interval: number) => {
     setInterval(notificationHandler, interval);
 };
 
-function notificationHandler(action: string) {
+function notificationHandler(_action: string) {
     getPendingEmailNotifications().then((notifications) => {
         notifications.forEach(
             (notification: {
@@ -57,7 +57,6 @@ function notificationHandler(action: string) {
                                 To: [
                                     {
                                         Email: notification.recipientEmail,
-                                        Name: 'Ayush',
                                     },
                                 ],
                                 Subject: notification.subject,
@@ -67,6 +66,7 @@ function notificationHandler(action: string) {
                             },
                         ],
                     });
+
                 sendEmail
                     .then((_response) => {
                         markEmailNotification(notification.id, 'sent');
@@ -76,7 +76,7 @@ function notificationHandler(action: string) {
                         logError(
                             'Email ' +
                                 notification.id +
-                                ' Count not be sent, Error:: ' +
+                                ' could not be sent, Error:: ' +
                                 err
                         );
                     });
@@ -99,6 +99,7 @@ function notificationHandler(action: string) {
                         To: notification.recipientPhone,
                         From: notification.sender,
                     });
+
                     sendText
                         .then((_response) => {
                             markTextNotification(notification.id, 'sent');

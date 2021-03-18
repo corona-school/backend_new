@@ -27,6 +27,7 @@ startNotificationHandler(10000);
     Subject: 'Test Message',
     Message: 'Hello from Mailjet',
 });
+
 */
 //sendText('+4917687984735', 'Welcome to Corona school');
 

@@ -52,10 +52,12 @@ export async function addTextNotification(
         } else {
             logError('Text Message recipient ' + recipient + ' does not exist');
         }
+    }).catch((err) => {
+        logError('Unable to fetch data from the database. Error:: ' + err);
     });
 }
 
-export async function addNotification(
+export async function addEmailNotification(
     recipient: string,
     sender: string,
     content: { Subject: string; Message: string; HTMLContent?: string }
