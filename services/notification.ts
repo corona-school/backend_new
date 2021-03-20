@@ -6,7 +6,7 @@ const DEFAULTSENDERS = {
     screening: '"Corona School Team" <screening@corona-school.de>',
     support: '"Corona School Team" <support@corona-school.de>',
     backend: '"Corona School Team" <backend@corona-school.de>',
-    sms: 'CoronaSchool',
+    sms: 'CoronaSchoo',
 };
 
 export const sendNotification = (

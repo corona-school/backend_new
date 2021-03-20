@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient, User } from '@prisma/client';
-import { logError } from '../services/logger';
+import { logError } from '../../../services/logger';
 import { generateOnetimeToken, signForgotToken } from './jwt_signature';
 import { keys } from './secretKeys';
 
@@ -93,7 +93,7 @@ export const generateEmailLink = (user: User) => {
 
     const emailToken = generateOnetimeToken(user.id, secret);
 
-    const emailLink = `localhost:4001/email/verify/${user.id}/${emailToken}`;
+    const emailLink = `localhost:4001/verification/email/${user.id}/${emailToken}`;
     return emailLink;
 };
 
@@ -102,7 +102,7 @@ export const generatePasswordLink = (user: userWithAuthData) => {
 
     const forgotToken = signForgotToken(user.id, secret);
 
-    const passwordResetLink = `localhost:4001/forgot-password/verify/${user.id}/${forgotToken}`;
+    const passwordResetLink = `localhost:4001/verification/password/${user.id}/${forgotToken}`;
     return passwordResetLink;
 };
 
@@ -111,7 +111,7 @@ export const generatePhoneLink = (user: User) => {
 
     const phoneToken = generateOnetimeToken(user.id, secret);
 
-    const phoneLink = `localhost:4001/phone/verify/${user.id}/${phoneToken}`;
+    const phoneLink = `localhost:4001/verification/phone/${user.id}/${phoneToken}`;
     return phoneLink;
 };
 

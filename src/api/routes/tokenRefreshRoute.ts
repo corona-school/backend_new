@@ -1,11 +1,11 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { logError, logInfo } from '../../services/logger';
 import jwt from 'jsonwebtoken';
-import { signAccessToken, signRefreshToken } from '../../utils/jwt_signature';
-import { keys } from '..//../utils/secretKeys';
-import { addRefreshToken, isRefreshTokenValid } from '../../utils/helpers';
+import { signAccessToken, signRefreshToken } from '../utils/jwt_signature';
+import { keys } from '../utils/secretKeys';
+import { addRefreshToken, isRefreshTokenValid } from '../utils/helpers';
 import { PrismaClient } from '.prisma/client';
 import passport from 'passport';
+import { logError, logInfo } from '../../../services/logger';
 
 const prisma = new PrismaClient();
 
@@ -16,12 +16,21 @@ export const refreshToken = (app: express.Application): void => {
     );
 
     refreshTokenApi.post(
-        '/:userid/',
+        '/',
         passport.authenticate('jwt', { session: false }),
-        async (req: Request, res: Response, next: NextFunction) => {
+        (req: Request, res: Response, next: NextFunction) => {
             try {
                 const { refreshToken } = req.body;
-                const { userid } = req.params;
+                const userid = (<any>req).user.userid._id;
+
+                if (userid == null || userid == undefined) {
+                    logError('Unable to get userID');
+                    next(new Error('Unable to get userID'));
+                }
+
+                logInfo(
+                    `Token refresh route started with the userid: ${userid}`
+                );
 
                 // Token cannot be empty or null
                 if (!refreshToken) {
@@ -35,7 +44,7 @@ export const refreshToken = (app: express.Application): void => {
                 }
 
                 /* Checking the token in conjection with userID, if its exist then we can
-                    further verifying it */
+                further verifying it */
 
                 let newAccessToken: string, newRefreshToken: string;
 
@@ -59,12 +68,14 @@ export const refreshToken = (app: express.Application): void => {
                         }
                     })
                     .catch((err) => {
-                        console.log(err);
+                        logError('Error getting the token data for the user');
+                        next(new Error('Error occurred'));
                     });
 
                 isTokenMatch
                     .then((result) => {
-                        if (result != null) {
+                        // getting the result from previous token(promise)
+                        if (result != undefined) {
                             if (result) {
                                 // If true, refresh token matched with the userid
                                 logInfo(`Token/User is valid`);
@@ -105,7 +116,6 @@ export const refreshToken = (app: express.Application): void => {
                                         /*
                                         We need to delete all token of the specific user(user_id) or make it false in the DB and add a new refresh token with valid == true
                                         */
-
                                         await prisma.refreshToken.deleteMany({
                                             where: {
                                                 userId: {
@@ -130,15 +140,22 @@ export const refreshToken = (app: express.Application): void => {
                                 next(new Error('Token/User is not valid'));
                             }
                         } else {
+                            logError(
+                                'Something went wrong: getToken response is null'
+                            );
                             next(new Error('Something went wrong'));
                         }
                     })
                     .catch((err) => {
-                        console.log(err);
+                        logError('Something went wrong');
+                        next(new Error('Something went wrong'));
                     });
-            } catch (error) {}
+            } catch (error) {
+                logError('Something went wrong');
+                next(new Error('Something went wrong'));
+            }
         }
     );
 
-    app.use('/refresh-token', refreshTokenApi);
+    app.use('/token_refresh', refreshTokenApi);
 };
