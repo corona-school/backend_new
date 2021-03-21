@@ -1,22 +1,26 @@
 import { addEmailNotification, addTextNotification } from './dataStore';
-import { logInfo } from './logger';
 
 const DEFAULTSENDERS = {
     anmeldung: '"Corona School Team" <anmeldung@corona-school.de>',
     noreply: '"Corona School Team" <noreply@corona-school.de>',
     screening: '"Corona School Team" <screening@corona-school.de>',
     support: '"Corona School Team" <support@corona-school.de>',
+    test: '"Corona School Team" <backend@corona-school.de>',
     sms: 'CoronaSchoo',
 };
 
 export const sendNotification = (
     recipient: string,
-    content: { Subject: string; Message: string; HTMLContent?: string }
+    subject: string,
+    templateID: number,
+    variables: object
 ): void => {
     const result = addEmailNotification(
         recipient,
         DEFAULTSENDERS.noreply,
-        content
+        subject,
+        templateID,
+        {}
     );
     console.log(result);
 };

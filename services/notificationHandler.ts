@@ -1,26 +1,17 @@
 import {
     getPendingEmailNotifications,
     getPendingTextNotifications,
-    markEmailNotification,
     markTextNotification,
 } from './dataStore';
 import { logError, logInfo } from './logger';
 import mailjet from 'node-mailjet';
+import { test_notification } from '../mailTemplates/test_notification';
 
-let mailjetEmailAPI: mailjet.Email.Client;
 let mailjetTextAPI: mailjet.SMS.Client;
-if (
-    process.env.MAILJET_API === undefined ||
-    process.env.MAILJET_SECRET === undefined ||
-    process.env.MAILJET_SMS_API === undefined
-) {
+
+if (process.env.MAILJET_SMS_API === undefined) {
     logError('Mailjet API not configured properly');
 } else {
-    mailjetEmailAPI = mailjet.connect(
-        process.env.MAILJET_API,
-        process.env.MAILJET_SECRET
-    );
-
     mailjetTextAPI = mailjet.connect(process.env.MAILJET_SMS_API, {
         url: 'api.mailjet.com',
         version: 'v4',
@@ -40,46 +31,28 @@ function notificationHandler(_action: string) {
                 id: string;
                 sender: string;
                 recipientEmail: string;
-                status: string;
-                textContent: string | null;
-                htmlContent: string | null;
                 subject: string;
+                status: string;
+                variables: string;
+                template: string;
             }) => {
-                const sendEmail = mailjetEmailAPI
-                    .post('send', { version: 'v3.1' })
-                    .request({
-                        Messages: [
-                            {
-                                From: {
-                                    Email: notification.sender,
-                                    Name: 'Corona School - Notification',
-                                },
-                                To: [
-                                    {
-                                        Email: notification.recipientEmail,
-                                    },
-                                ],
-                                Subject: notification.subject,
-                                TextPart: notification.textContent,
-                                HTMLPart: notification.htmlContent,
-                                CustomID: notification.id,
-                            },
-                        ],
-                    });
-
-                sendEmail
-                    .then((_response) => {
-                        markEmailNotification(notification.id, 'sent');
-                    })
-                    .catch((err) => {
-                        markEmailNotification(notification.id, 'error');
-                        logError(
-                            'Email ' +
-                                notification.id +
-                                ' could not be sent, Error:: ' +
-                                err
+                switch (notification.template) {
+                    case '2672994':
+                        const email = new test_notification(
+                            notification.sender,
+                            notification.recipientEmail,
+                            JSON.parse(notification.variables),
+                            notification.id
                         );
-                    });
+                        email
+                            .delayed_send()
+                            .then((res) => {
+                                logInfo('Sent Notification ' + notification.id);
+                            })
+                            .catch((err) => {
+                                logError(err);
+                            });
+                }
             }
         );
     });

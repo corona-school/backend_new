@@ -78,13 +78,14 @@ model RequestMatches {
 
 model EmailNotifications {
     id              String          @id @default(cuid())
+    template        String
+    priority        NotificationPriority    @default(low)
     sender          String
     recipient       User            @relation(fields:[recipientEmail],references:[email])
     recipientEmail  String
     recipientName   String
     subject         String
-    textContent     String?
-    htmlContent     String?
+    variables       String
     status          NotificationStatus @default(pending)
 }
 
@@ -105,4 +106,8 @@ enum NotificationStatus {
     sent
     error
     pending
+}
+enum NotificationPriority {
+    high
+    low
 }

@@ -6,7 +6,7 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "tsc",
-        "server:dev": "nodemon --config ./nodemon.json -r dotenv/config ./server/index.ts",
+        "server:dev": "nodemon --config ./nodemon.json -r dotenv/config ./server/index.ts ",
         "migration:dev": "prisma migrate dev --preview-feature"
     },
     "keywords": [],

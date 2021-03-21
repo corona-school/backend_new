@@ -2,11 +2,12 @@ import { ConfigureApollo } from '../apollo';
 import express from 'express';
 import cors from 'cors';
 import { ConfigureREST } from '../rest';
-import { ConfigureLogger, logInfo } from '../services/logger';
-import { sendNotification, sendText } from '../services/notification';
+import { ConfigureLogger, logError, logInfo } from '../services/logger';
 import { startNotificationHandler } from '../services/notificationHandler';
 import helmet from 'helmet';
 import hpp from 'hpp';
+import { sendNotification } from '../services/notification';
+import { test_notification } from '../mailTemplates/test_notification';
 const app = express();
 
 ConfigureApollo(app);
@@ -22,13 +23,36 @@ app.listen(process.env.PORT, () =>
 
 //Start the persistant notification handler.
 startNotificationHandler(10000);
-
-/*sendNotification('ayush.pandey@corona-school.de', {
-    Subject: 'Test Message',
-    Message: 'Hello from Mailjet',
-});
-
+/*
+const email = new test_notification(
+    '"Corona School Team" <backend@corona-school.de>',
+    'ayush.pandey@corona-school.de',
+    { subject: 'Test Send Message', cust_name: 'Ayush' }
+);
+email
+    .defer()
+    .then((res) => {
+        logInfo(res.res);
+    })
+    .catch((err) => {
+        logError(err);
+    });
 */
+const email = new test_notification(
+    '"Corona School Team" <backend@corona-school.de>',
+    'ayush.pandey@corona-school.de',
+    { subject: 'Forced Send Message', cust_name: 'Ayush' }
+);
+
+email
+    .forced_send()
+    .then((res) => {
+        logInfo(res.res);
+    })
+    .catch((err) => {
+        logError(err);
+    });
+//sendNotification('ayush.pandey@corona-school.de', 'Test Message', '2672994');
 //sendText('+4917687984735', 'Welcome to Corona school');
 
 /*
@@ -40,6 +64,12 @@ addUser({
 
 
 */
+
+/*
+sendEmailNotification('ayush.pandey@corona-school.de', {
+    cust_name: 'Ayush',
+    subject: 'Hello',
+});*/
 
 function ConfigureCORS() {
     let requestOrigins;

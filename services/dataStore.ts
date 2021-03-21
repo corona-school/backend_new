@@ -60,34 +60,59 @@ export async function addTextNotification(
 export async function addEmailNotification(
     recipient: string,
     sender: string,
-    content: { Subject: string; Message: string; HTMLContent?: string }
+    subject: string,
+    templateID: number,
+    variables: object,
+    status?: 'pending' | 'sent' | undefined
 ) {
-    if (content.HTMLContent === undefined) {
-        content.HTMLContent = '';
-    }
-    const user = prisma.user.findUnique({
-        where: {
-            email: recipient,
-        },
-    });
-
-    user.then((response) => {
-        if (response !== null) {
-            return prisma.emailNotifications.create({
-                data: {
-                    recipientName: response.firstName,
-                    recipientEmail: recipient,
-                    sender: sender,
-                    subject: content.Subject,
-                    textContent: content.Message,
-                    htmlContent: content.HTMLContent,
-                },
+    return new Promise<{ status: number; res: string }>((resolve, reject) => {
+        const user = prisma.user.findUnique({
+            where: {
+                email: recipient,
+            },
+        });
+        user.then((response) => {
+            if (response !== null) {
+                prisma.emailNotifications
+                    .create({
+                        data: {
+                            recipientName: response.firstName,
+                            recipientEmail: recipient,
+                            sender: sender,
+                            subject: subject,
+                            variables: JSON.stringify(variables),
+                            template: templateID.toString(),
+                            status: status === undefined ? 'pending' : status,
+                        },
+                    })
+                    .then((res) => {
+                        resolve({
+                            status: 200,
+                            res: res.id,
+                        });
+                    })
+                    .catch((err) => {
+                        reject({
+                            status: 400,
+                            res:
+                                'Problem adding email to the pending list. Error:' +
+                                err,
+                        });
+                    });
+            } else {
+                logError('Mail recipient ' + recipient + ' does not exist');
+                reject({
+                    status: 400,
+                    res: 'Mail recipient ' + recipient + ' does not exist',
+                });
+            }
+        }).catch((err) => {
+            logError('Unable to fetch data from the database. Error:: ' + err);
+            reject({
+                status: 400,
+                res: 'Error occurred while fetching the data. Error:' + err,
             });
-        } else {
-            logError('Mail recipient ' + recipient + ' does not exist');
-        }
-    }).catch((err) => {
-        logError('Unable to fetch data from the database. Error:: ' + err);
+        });
     });
 }
 
