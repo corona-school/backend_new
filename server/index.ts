@@ -6,7 +6,6 @@ import { ConfigureLogger, logError, logInfo } from '../services/logger';
 import { startNotificationHandler } from '../services/notificationHandler';
 import helmet from 'helmet';
 import hpp from 'hpp';
-import { sendNotification } from '../services/notification';
 import { test_notification } from '../mailTemplates/test_notification';
 const app = express();
 

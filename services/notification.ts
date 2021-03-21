@@ -1,4 +1,4 @@
-import { addEmailNotification, addTextNotification } from './dataStore';
+import { addTextNotification } from './dataStore';
 
 const DEFAULTSENDERS = {
     anmeldung: '"Corona School Team" <anmeldung@corona-school.de>',
@@ -9,21 +9,6 @@ const DEFAULTSENDERS = {
     sms: 'CoronaSchoo',
 };
 
-export const sendNotification = (
-    recipient: string,
-    subject: string,
-    templateID: number,
-    variables: object
-): void => {
-    const result = addEmailNotification(
-        recipient,
-        DEFAULTSENDERS.noreply,
-        subject,
-        templateID,
-        {}
-    );
-    console.log(result);
-};
 
 export const sendText = (recipient: string, message: string): void => {
     addTextNotification(DEFAULTSENDERS.sms, recipient, message);
