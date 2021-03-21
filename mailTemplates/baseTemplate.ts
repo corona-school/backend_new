@@ -60,7 +60,8 @@ export abstract class baseTemplate {
                             this.request.Subject,
                             this.request.TemplateID,
                             this.request.variables,
-                            'sent'
+                            'sent',
+                            'high'
                         );
                         email
                             .then((response) => {

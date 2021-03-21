@@ -63,7 +63,8 @@ export async function addEmailNotification(
     subject: string,
     templateID: number,
     variables: object,
-    status?: 'pending' | 'sent' | undefined
+    status?: 'pending' | 'sent' | undefined,
+    priority?: 'high' | 'low' | undefined
 ) {
     return new Promise<{ status: number; res: string }>((resolve, reject) => {
         const user = prisma.user.findUnique({
@@ -83,6 +84,7 @@ export async function addEmailNotification(
                             variables: JSON.stringify(variables),
                             template: templateID.toString(),
                             status: status === undefined ? 'pending' : status,
+                            priority: priority === undefined ? 'low' : 'high',
                         },
                     })
                     .then((res) => {
