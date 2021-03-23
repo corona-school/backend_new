@@ -1,4 +1,5 @@
-import { addNotification, addTextNotification } from './dataStore';
+import { addEmailNotification, addTextNotification } from './dataStore';
+import { logInfo } from './logger';
 
 const DEFAULTSENDERS = {
     anmeldung: '"Corona School Team" <anmeldung@corona-school.de>',
@@ -13,7 +14,12 @@ export const sendNotification = (
     recipient: string,
     content: { Subject: string; Message: string; HTMLContent?: string }
 ): void => {
-    addNotification(recipient, DEFAULTSENDERS.backend, content);
+    const result = addEmailNotification(
+        recipient,
+        DEFAULTSENDERS.noreply,
+        content
+    );
+    console.log(result);
 };
 
 export const sendText = (recipient: string, message: string): void => {

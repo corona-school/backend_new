@@ -9,7 +9,6 @@ import mailjet from 'node-mailjet';
 
 let mailjetEmailAPI: mailjet.Email.Client;
 let mailjetTextAPI: mailjet.SMS.Client;
-
 if (
     process.env.MAILJET_API === undefined ||
     process.env.MAILJET_SECRET === undefined ||
@@ -23,9 +22,9 @@ if (
     );
 
     mailjetTextAPI = mailjet.connect(process.env.MAILJET_SMS_API, {
-        url: 'api.mailjet.com', // default is the API url
-        version: 'v4', // default is '/v3'
-        perform_api_call: true, // used for tests. default is true
+        url: 'api.mailjet.com',
+        version: 'v4',
+        perform_api_call: true,
     });
 }
 
@@ -34,8 +33,8 @@ export const startNotificationHandler = (interval: number) => {
     setInterval(notificationHandler, interval);
 };
 
-function notificationHandler(action: string) {
-    getPendingEmailNotifications().then((notifications: any) => {
+function notificationHandler(_action: string) {
+    getPendingEmailNotifications().then((notifications) => {
         notifications.forEach(
             (notification: {
                 id: string;
@@ -58,7 +57,6 @@ function notificationHandler(action: string) {
                                 To: [
                                     {
                                         Email: notification.recipientEmail,
-                                        Name: 'Farrukh',
                                     },
                                 ],
                                 Subject: notification.subject,
@@ -77,7 +75,7 @@ function notificationHandler(action: string) {
                         logError(
                             'Email ' +
                                 notification.id +
-                                ' Could not be sent, Error:: ' +
+                                ' could not be sent, Error:: ' +
                                 err
                         );
                     });
@@ -109,7 +107,7 @@ function notificationHandler(action: string) {
                             logError(
                                 'Text ' +
                                     notification.id +
-                                    ' Could not be sent, Error:: ' +
+                                    ' Count not be sent, Error:: ' +
                                     err
                             );
                         });
