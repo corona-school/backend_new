@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-
 import { logError } from './logger';
 
 const prisma = new PrismaClient();
@@ -35,13 +34,14 @@ export async function addTextNotification(
     recipient: string,
     message: string
 ) {
-    const user = prisma.user.findUnique({
-        where: {
-            phone: recipient,
-        },
-    });
-    user.then((response) => {
-        if (response !== null) {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                phone: recipient,
+            },
+        });
+
+        if (user?.phone) {
             return prisma.textNotifications.create({
                 data: {
                     sender: sender,
@@ -52,9 +52,9 @@ export async function addTextNotification(
         } else {
             logError('Text Message recipient ' + recipient + ' does not exist');
         }
-    }).catch((err) => {
+    } catch (err) {
         logError('Unable to fetch data from the database. Error:: ' + err);
-    });
+    }
 }
 
 export async function addEmailNotification(
@@ -65,18 +65,18 @@ export async function addEmailNotification(
     if (content.HTMLContent === undefined) {
         content.HTMLContent = '';
     }
-    const user = prisma.user.findUnique({
-        where: {
-            email: recipient,
-        },
-    });
 
-    user.then((response) => {
-        if (response !== null) {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                email: recipient,
+            },
+        });
+        if (user) {
             return prisma.emailNotifications.create({
                 data: {
-                    recipientName: response.firstName,
-                    recipientEmail: recipient,
+                    recipientName: user.firstName,
+                    recipientEmail: user.email,
                     sender: sender,
                     subject: content.Subject,
                     textContent: content.Message,
@@ -86,9 +86,9 @@ export async function addEmailNotification(
         } else {
             logError('Mail recipient ' + recipient + ' does not exist');
         }
-    }).catch((err) => {
-        logError('Unable to fetch data from the database. Error:: ' + err);
-    });
+    } catch (err) {
+        logError('Unable to add email notification. Error:: ' + err);
+    }
 }
 
 export async function markEmailNotification(
