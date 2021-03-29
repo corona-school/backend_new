@@ -1,5 +1,4 @@
 import { addEmailNotification, addTextNotification } from './dataStore';
-import { logInfo } from './logger';
 
 const DEFAULTSENDERS = {
     anmeldung: '"Corona School Team" <anmeldung@corona-school.de>',
@@ -21,6 +20,9 @@ export const sendNotification = (
     );
 };
 
-export const sendText = (recipient: string, message: string): void => {
-    addTextNotification(DEFAULTSENDERS.sms, recipient, message);
+export const sendText = async (
+    recipient: string,
+    message: string
+): Promise<void> => {
+    await addTextNotification(DEFAULTSENDERS.sms, recipient, message);
 };

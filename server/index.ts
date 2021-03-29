@@ -2,8 +2,7 @@ import { ConfigureApollo } from '../apollo';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { ConfigureREST } from '../rest';
-import { ConfigureLogger, logInfo } from '../services/logger';
-import { sendNotification, sendText } from '../services/notification';
+import { ConfigureLogger } from '../services/logger';
 import { startNotificationHandler } from '../services/notificationHandler';
 import helmet from 'helmet';
 import hpp from 'hpp';
@@ -46,26 +45,7 @@ app.listen(process.env.PORT, () =>
     console.log(`Server listening on port ${process.env.PORT}`)
 );
 
-//Start the persistant notification handler.
-//startNotificationHandler(10000);
-
-/*sendNotification('ayush.pandey@corona-school.de', {
-    Subject: 'Test Message',
-    Message: 'Hello from Mailjet',
-});
-
-*/
-//sendText('+4917687984735', 'Welcome to Corona school');
-
-/*
-addUser({
-    firstName: 'Ayush',
-    lastName: 'Pandey',
-    email: 'ayush.pandey@corona-school.de',
-}).then((response) => console.log(response));
-
-
-*/
+startNotificationHandler(10000);
 
 function ConfigureCORS() {
     let requestOrigins;
@@ -75,7 +55,7 @@ function ConfigureCORS() {
             'http://localhost:3000',
             'https://web-user-app-live.herokuapp.com',
             'https://web-user-app-dev.herokuapp.com',
-            /^https:\/\/cs-web-user-app-(pr-[0-9]+|br-[\-a-z0-9]+).herokuapp.com$/,
+            /^https:\/\/cs-web-user-app-(pr-[0-9]+|br-[-a-z0-9]+).herokuapp.com$/,
         ];
     } else {
         requestOrigins = [
