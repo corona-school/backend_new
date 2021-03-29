@@ -1,5 +1,5 @@
 import { ConfigureApollo } from '../apollo';
-import express, { Request, Response, NextFunction} from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { ConfigureREST } from '../rest';
 import { ConfigureLogger, logInfo } from '../services/logger';
@@ -7,11 +7,11 @@ import { sendNotification, sendText } from '../services/notification';
 import { startNotificationHandler } from '../services/notificationHandler';
 import helmet from 'helmet';
 import hpp from 'hpp';
-import '../src/api/middlewares/passport-auth';
-import { authentication } from '../src/api/routes/authRoute';
-import { refreshToken } from '../src/api/routes/tokenRefreshRoute';
-import { userdata } from '../src/api/routes/userDataRoute';
-import { verification } from '../src/api/routes/verificationRoute';
+import '../middlewares/auth';
+import { authentication } from '../routes/authRoute';
+import { refreshToken } from '../routes/tokenRefreshRoute';
+import { userdata } from '../routes/userDataRoute';
+import { verification } from '../routes/verificationRoute';
 
 const app = express();
 
@@ -47,7 +47,7 @@ app.listen(process.env.PORT, () =>
 );
 
 //Start the persistant notification handler.
-startNotificationHandler(10000);
+//startNotificationHandler(10000);
 
 /*sendNotification('ayush.pandey@corona-school.de', {
     Subject: 'Test Message',

@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-export const resetPasswordSchema = Joi.object({
+export const passwordSchema = Joi.object({
     password: Joi.string()
         .min(8)
         .pattern(new RegExp('^[a-zA-Z0-9]{6,30}$'))
@@ -9,6 +9,11 @@ export const resetPasswordSchema = Joi.object({
 
 export const emailSchema = Joi.object({
     email: Joi.string().email().required(),
+});
+
+export const loginSchema = Joi.object({
+    email: emailSchema,
+    password: passwordSchema,
 });
 
 export const registerDataSchema = Joi.object({

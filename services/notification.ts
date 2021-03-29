@@ -19,7 +19,6 @@ export const sendNotification = (
         DEFAULTSENDERS.noreply,
         content
     );
-    console.log(result);
 };
 
 export const sendText = (recipient: string, message: string): void => {

@@ -1,6 +1,7 @@
 import express from 'express';
 import passport from 'passport';
 import { signup, login, resetPassword } from '../controllers/authController';
+import { loginUser } from '../services/authService';
 
 export const authentication = (app: express.Application): void => {
     const authApi = express.Router();
@@ -8,11 +9,11 @@ export const authentication = (app: express.Application): void => {
 
     authApi.post('/signup', signup);
     authApi.post('/login', login);
-    authApi.post(
-        '/password_reset',
-        passport.authenticate('jwt', { session: false }),
-        resetPassword
-    );
+    // authApi.post(
+    //     '/password_reset',
+    //     passport.authenticate('jwt', { session: false }),
+    //     resetPassword
+    // );
 
     app.use('/auth', authApi);
 };

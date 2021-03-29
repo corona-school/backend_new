@@ -24,9 +24,7 @@ model User {
   notificationLevel  NotificationLevel    @default(all)
   Pupil              Pupil[]
   Volunteer          Volunteer[]
-  AuthenticationData AuthenticationData[]
   Notifications      EmailNotifications[]
-  RefreshToken       RefreshToken[]
   TextNotifications  TextNotifications[]
 }
 
@@ -57,8 +55,7 @@ model Offer {
 
 model AuthenticationData {
   id       String @id @default(cuid())
-  user     User   @relation(fields: [userId], references: [id])
-  userId   String
+  userId   String @unique
   password String
 }
 
@@ -72,9 +69,8 @@ model PupilMatchRequest {
 
 model RefreshToken {
   id     String  @id @default(cuid())
-  token  String
-  user   User    @relation(fields: [userId], references: [id])
-  userId String
+  userId String 
+  token  String  @unique
   valid  Boolean @default(true)
 }
 

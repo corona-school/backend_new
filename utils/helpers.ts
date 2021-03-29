@@ -1,43 +1,23 @@
-import { Prisma, PrismaClient, User } from '@prisma/client';
-import { logError } from '../../../services/logger';
+import { PrismaClient, User } from '@prisma/client';
 import { generateOnetimeToken, signForgotToken } from './jwt_signature';
 import { keys } from './secretKeys';
 
 const prisma = new PrismaClient();
 
-type userWithAuthData = Prisma.UserGetPayload<{
-    select: {
-        id: true;
-        email: true;
-        firstName: true;
-        AuthenticationData: {
-            select: { password: true };
-        };
-    };
-}>;
-
 export const addRefreshToken = async (userid: string, token: string) => {
     return await prisma.refreshToken.create({
         data: {
+            userId: userid,
             token: token,
-            user: {
-                connect: { id: userid },
-            },
         },
     });
 };
 
-export const isRefreshTokenValid = async (userid: string) => {
-    return await prisma.user.findUnique({
+export const isRefreshTokenValid = (userid: string) => {
+    return prisma.refreshToken.findFirst({
         where: {
-            id: userid,
-        },
-        select: {
-            RefreshToken: {
-                where: {
-                    valid: true,
-                },
-            },
+            userId: userid,
+            valid: true,
         },
     });
 };
@@ -60,8 +40,11 @@ export const findEmailToUser = async (userid: string) => {
                     emailVerified: result.emailVerified,
                 };
             } else {
-                logError(`Couldn't find any email for the userid: ${userid}`);
+                return null;
             }
+        })
+        .catch((err) => {
+            return err;
         });
 };
 
@@ -83,8 +66,11 @@ export const findPhoneToUser = async (userid: string) => {
                     phoneVerified: result.phoneVerified,
                 };
             } else {
-                logError(`Couldn't find any user with the ID : ${userid}`);
+                return null;
             }
+        })
+        .catch((err) => {
+            return err;
         });
 };
 
@@ -97,8 +83,8 @@ export const generateEmailLink = (user: User) => {
     return emailLink;
 };
 
-export const generatePasswordLink = (user: userWithAuthData) => {
-    const secret = `${user.AuthenticationData[0].password}${keys.accessTokenKey}`;
+export const generatePasswordLink = (user: any, authData: any) => {
+    const secret = `${authData.password}${keys.accessTokenKey}`;
 
     const forgotToken = signForgotToken(user.id, secret);
 
@@ -113,6 +99,17 @@ export const generatePhoneLink = (user: User) => {
 
     const phoneLink = `localhost:4001/verification/phone/${user.id}/${phoneToken}`;
     return phoneLink;
+};
+
+export const getUserAuthData = (userId: string) => {
+    return prisma.authenticationData.findUnique({
+        where: {
+            userId,
+        },
+        select: {
+            password: true,
+        },
+    });
 };
 
 export const isEmailVerified = async (email: string) => {};
