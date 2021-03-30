@@ -22,7 +22,7 @@ app.listen(process.env.PORT, () =>
 
 //Start the persistant notification handler.
 startNotificationHandler(10000);
-/*
+
 const email = new test_notification(
     '"Corona School Team" <backend@corona-school.de>',
     'ayush.pandey@corona-school.de',
@@ -36,21 +36,21 @@ email
     .catch((err) => {
         logError(err);
     });
-*/
+/*
 const email = new test_notification(
     '"Corona School Team" <backend@corona-school.de>',
     'ayush.pandey@corona-school.de',
     { subject: 'Forced Send Message', cust_name: 'Ayush' }
-);
+);*/
 
-email
-    .forced_send()
+/*email
+    .defer()
     .then((res) => {
         logInfo(res.res);
     })
     .catch((err) => {
         logError(err);
-    });
+    });*/
 //sendNotification('ayush.pandey@corona-school.de', 'Test Message', '2672994');
 //sendText('+4917687984735', 'Welcome to Corona school');
 

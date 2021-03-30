@@ -87,6 +87,7 @@ model EmailNotifications {
     subject         String
     variables       String
     status          NotificationStatus @default(pending)
+    updatedAt       DateTime @updatedAt
 }
 
 model TextNotifications{
@@ -96,6 +97,7 @@ model TextNotifications{
     sender          String
     text            String
     status          NotificationStatus @default(pending)
+    updatedAt       DateTime @updatedAt
 }
 enum NotificationLevel {
     necessary

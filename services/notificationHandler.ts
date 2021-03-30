@@ -24,9 +24,10 @@ export const startNotificationHandler = (interval: number) => {
     setInterval(notificationHandler, interval);
 };
 
-function notificationHandler(_action: string) {
-    getPendingEmailNotifications().then((notifications) => {
-        notifications.forEach(
+async function notificationHandler(_action: string) {
+    try {
+        const emailNotifications = await getPendingEmailNotifications();
+        emailNotifications.forEach(
             (notification: {
                 id: string;
                 sender: string;
@@ -36,62 +37,73 @@ function notificationHandler(_action: string) {
                 variables: string;
                 template: string;
             }) => {
+                let email = undefined;
                 switch (notification.template) {
                     case '2672994':
-                        const email = new test_notification(
+                        {
+                            email = new test_notification(
+                                notification.sender,
+                                notification.recipientEmail,
+                                JSON.parse(notification.variables),
+                                notification.id
+                            );
+                        }
+                        break;
+                    default: {
+                        email = new test_notification(
                             notification.sender,
                             notification.recipientEmail,
                             JSON.parse(notification.variables),
                             notification.id
                         );
-                        email
-                            .delayed_send()
-                            .then((res) => {
-                                logInfo('Sent Notification ' + notification.id);
-                            })
-                            .catch((err) => {
-                                logError(err);
-                            });
+                    }
                 }
+                email
+                    .delayed_send()
+                    .then((res) => {
+                        logInfo('Sent Notification ' + notification.id);
+                    })
+                    .catch((err) => {
+                        logError(err);
+                    });
             }
         );
-    });
+    } catch (e) {
+        logError('Problem getting notifications from the database. Error:' + e);
+    }
 
-    getPendingTextNotifications()
-        .then((notifications) => {
-            notifications.forEach(
-                (notification: {
-                    id: string;
-                    sender: string;
-                    status: string;
-                    recipientPhone: string;
-                    text: string;
-                }) => {
-                    const sendText = mailjetTextAPI.post('sms-send').request({
-                        Text: notification.text,
-                        To: notification.recipientPhone,
-                        From: notification.sender,
+    try {
+        const textNotifications = await getPendingTextNotifications();
+        textNotifications.forEach(
+            (notification: {
+                id: string;
+                sender: string;
+                status: string;
+                recipientPhone: string;
+                text: string;
+            }) => {
+                const sendText = mailjetTextAPI.post('sms-send').request({
+                    Text: notification.text,
+                    To: notification.recipientPhone,
+                    From: notification.sender,
+                });
+
+                sendText
+                    .then((_response) => {
+                        markTextNotification(notification.id, 'sent');
+                    })
+                    .catch((err) => {
+                        markTextNotification(notification.id, 'error');
+                        logError(
+                            'Text ' +
+                                notification.id +
+                                ' Count not be sent, Error:: ' +
+                                err
+                        );
                     });
-
-                    sendText
-                        .then((_response) => {
-                            markTextNotification(notification.id, 'sent');
-                        })
-                        .catch((err) => {
-                            markTextNotification(notification.id, 'error');
-                            logError(
-                                'Text ' +
-                                    notification.id +
-                                    ' Count not be sent, Error:: ' +
-                                    err
-                            );
-                        });
-                }
-            );
-        })
-        .catch((err) => {
-            logError(
-                'Problem getting messages from the database. Error:: ' + err
-            );
-        });
+            }
+        );
+    } catch (e) {
+        logError('Problem getting notifications from the database. Error:' + e);
+    }
 }

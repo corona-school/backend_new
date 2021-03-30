@@ -17,6 +17,7 @@ if (
         process.env.MAILJET_SECRET
     );
 }
+
 export abstract class baseTemplate {
     abstract notificationID: string;
     abstract templateID: number;
@@ -44,136 +45,120 @@ export abstract class baseTemplate {
         variables: object
     ): object;
 
-    forced_send() {
-        return new Promise<{ status: number; res: string }>(
-            (resolve, reject) => {
-                const emailAPI = mailjetEmailAPI
+    async forced_send(): Promise<{ status: number; res: string }> {
+        try {
+            const emailAPI = await mailjetEmailAPI
+                .post('send', { version: 'v3.1' })
+                .request({
+                    Messages: [this.request],
+                });
+
+            const email = await addEmailNotification(
+                this.receiver,
+                this.sender,
+                this.request.Subject,
+                this.request.TemplateID,
+                this.request.variables,
+                'sent',
+                'high'
+            );
+            this.notificationID = email.res;
+
+            return {
+                status: 200,
+                res: 'Email sent successfully',
+            };
+        } catch (err) {
+            return {
+                status: 400,
+                res: 'Could not send email. Error ' + err,
+            };
+        }
+    }
+
+    async delayed_send(): Promise<{ status: number; res: string }> {
+        if (
+            this.notificationID === undefined ||
+            this.notificationID === 'unsent'
+        ) {
+            logError(
+                'Cannot delay-send a message which has not been added to the pending list'
+            );
+            return {
+                status: 400,
+                res:
+                    'Cannot delay-send a message which has not been added to the pending list',
+            };
+        } else {
+            try {
+                const email = await mailjetEmailAPI
                     .post('send', { version: 'v3.1' })
                     .request({
                         Messages: [this.request],
                     });
-                emailAPI
-                    .then((response) => {
-                        const email = addEmailNotification(
-                            this.receiver,
-                            this.sender,
-                            this.request.Subject,
-                            this.request.TemplateID,
-                            this.request.variables,
-                            'sent',
-                            'high'
-                        );
-                        email
-                            .then((response) => {
-                                this.notificationID = response.res;
-                                resolve({
-                                    status: 200,
-                                    res: 'Email sent successfully',
-                                });
-                            })
-                            .catch((err) => {
-                                reject({
-                                    status: 400,
-                                    res:
-                                        'Email sent but not added in the notification list. Error: ' +
-                                        err,
-                                });
-                            });
-                    })
-                    .catch((err) => {
-                        reject({
-                            status: 400,
-                            res: 'Could not send email. Error ' + err,
-                        });
-                    });
-            }
-        );
-    }
-
-    delayed_send() {
-        return new Promise<{ status: number; res: string }>(
-            (resolve, reject) => {
-                if (
-                    this.notificationID === undefined ||
-                    this.notificationID === 'unsent'
-                ) {
-                    logError(
-                        'Cannot delay-send a message which has not been added to the pending list'
+                try {
+                    const marked = await markEmailNotification(
+                        this.notificationID,
+                        'sent'
                     );
-                    reject({
-                        status: 400,
-                        res:
-                            'Cannot delay-send a message which has not been added to the pending list',
-                    });
-                } else {
-                    const email = mailjetEmailAPI
-                        .post('send', { version: 'v3.1' })
-                        .request({
-                            Messages: [this.request],
-                        });
-                    email
-                        .then((_response) => {
-                            markEmailNotification(this.notificationID, 'sent')
-                                .then((res) => {
-                                    resolve({
-                                        status: 200,
-                                        res: 'Email sent successfully',
-                                    });
-                                })
-                                .catch((err) => {
-                                    reject({
-                                        status: 400,
-                                        res:
-                                            'There was a problem sending the email. Error:' +
-                                            err,
-                                    });
-                                });
-                        })
-                        .catch((err) => {
-                            reject({
-                                status: 400,
-                                res:
-                                    'There was a problem sending the email. Error:' +
-                                    err,
-                            });
-                            markEmailNotification(this.notificationID, 'error');
-                            logError(
-                                'Email ' +
-                                    this.notificationID +
-                                    ' could not be sent, Error:: ' +
-                                    err
-                            );
-                        });
+                } catch (err) {
+                    logError(
+                        'Email ' +
+                            this.notificationID +
+                            ' could not be marked sent, Error:: ' +
+                            err
+                    );
                 }
+
+                return {
+                    status: 200,
+                    res: 'Email sent successfully',
+                };
+            } catch (err) {
+                logError(
+                    'Email ' +
+                        this.notificationID +
+                        ' could not be sent, Error:: ' +
+                        err
+                );
+
+                try {
+                    await markEmailNotification(this.notificationID, 'error');
+                } catch (err) {
+                    logError(
+                        'Email ' +
+                            this.notificationID +
+                            ' could not be marked error, Error:: ' +
+                            err
+                    );
+                }
+                return {
+                    status: 400,
+                    res: 'There was a problem sending the email. Error:' + err,
+                };
             }
-        );
+        }
     }
 
-    defer() {
-        return new Promise<{ status: number; res: string }>(
-            (resolve, reject) => {
-                const email = addEmailNotification(
-                    this.receiver,
-                    this.sender,
-                    this.request.Subject,
-                    this.request.TemplateID,
-                    this.request.variables
-                );
-                email
-                    .then((response) => {
-                        this.notificationID = response.res;
-                        resolve({
-                            status: 400,
-                            res: 'Email added to the pending list',
-                        });
-                    })
-                    .catch((err) => {
-                        reject({
-                            status: 400,
-                            res: err,
-                        });
-                    });
-            }
-        );
+    async defer(): Promise<{ status: number; res: string }> {
+        try {
+            const email = await addEmailNotification(
+                this.receiver,
+                this.sender,
+                this.request.Subject,
+                this.request.TemplateID,
+                this.request.variables
+            );
+            this.notificationID = email.res;
+            return {
+                status: 400,
+                res: 'Email added to the pending list',
+            };
+        } catch (e) {
+            return {
+                status: 400,
+                res: e,
+            };
+        }
     }
 }
