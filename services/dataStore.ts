@@ -35,26 +35,23 @@ export async function addTextNotification(
     recipient: string,
     message: string
 ) {
-    const user = prisma.user.findUnique({
-        where: {
-            phone: recipient,
-        },
-    });
-    user.then((response) => {
-        if (response !== null) {
-            return prisma.textNotifications.create({
-                data: {
-                    sender: sender,
-                    recipientPhone: recipient,
-                    text: message,
-                },
-            });
-        } else {
-            logError('Text Message recipient ' + recipient + ' does not exist');
-        }
-    }).catch((err) => {
-        logError('Unable to fetch data from the database. Error:: ' + err);
-    });
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                phone: recipient,
+            },
+        });
+
+        return prisma.textNotifications.create({
+            data: {
+                sender: sender,
+                recipientPhone: recipient,
+                text: message,
+            },
+        });
+    } catch (e) {
+        logError('Problem adding the text message. Error:' + e);
+    }
 }
 
 export async function addEmailNotification(
@@ -66,56 +63,42 @@ export async function addEmailNotification(
     status?: 'pending' | 'sent' | undefined,
     priority?: 'high' | 'low' | undefined
 ) {
-    return new Promise<{ status: number; res: string }>((resolve, reject) => {
-        const user = prisma.user.findUnique({
+    try {
+        const user = await prisma.user.findUnique({
             where: {
                 email: recipient,
             },
         });
-        user.then((response) => {
-            if (response !== null) {
-                prisma.emailNotifications
-                    .create({
-                        data: {
-                            recipientName: response.firstName,
-                            recipientEmail: recipient,
-                            sender: sender,
-                            subject: subject,
-                            variables: JSON.stringify(variables),
-                            template: templateID.toString(),
-                            status: status === undefined ? 'pending' : status,
-                            priority: priority === undefined ? 'low' : 'high',
-                        },
-                    })
-                    .then((res) => {
-                        resolve({
-                            status: 200,
-                            res: res.id,
-                        });
-                    })
-                    .catch((err) => {
-                        reject({
-                            status: 400,
-                            res:
-                                'Problem adding email to the pending list. Error:' +
-                                err,
-                        });
-                    });
-            } else {
-                logError('Mail recipient ' + recipient + ' does not exist');
-                reject({
-                    status: 400,
-                    res: 'Mail recipient ' + recipient + ' does not exist',
-                });
-            }
-        }).catch((err) => {
-            logError('Unable to fetch data from the database. Error:: ' + err);
-            reject({
-                status: 400,
-                res: 'Error occurred while fetching the data. Error:' + err,
+        if (user != null) {
+            const notification = await prisma.emailNotifications.create({
+                data: {
+                    recipientName: user.firstName,
+                    recipientEmail: recipient,
+                    sender: sender,
+                    subject: subject,
+                    variables: JSON.stringify(variables),
+                    template: templateID.toString(),
+                    status: status === undefined ? 'pending' : status,
+                    priority: priority === undefined ? 'low' : 'high',
+                },
             });
-        });
-    });
+            return {
+                status: 200,
+                res: notification.id,
+            };
+        } else {
+            logError('Mail recipient ' + recipient + ' does not exist');
+            return {
+                status: 400,
+                res: 'Mail recipient ' + recipient + ' does not exist',
+            };
+        }
+    } catch (e) {
+        return {
+            status: 400,
+            res: 'Problem adding email to the pending list. Error:' + e,
+        };
+    }
 }
 
 export async function markEmailNotification(
