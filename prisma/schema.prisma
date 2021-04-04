@@ -11,105 +11,116 @@ generator client {
 }
 
 model User {
-    id          String      @id @default(cuid())
-    createdAt   DateTime    @default(now())
-    updatedAt   DateTime    @default(now())
-    email       String      @unique
-    phone       String      @unique
-    active      Boolean     @default(false)
-    notificationLevel NotificationLevel @default(all)
-    firstName   String
-    lastName    String?
+  id                 String               @id @default(cuid())
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @default(now())
+  email              String               @unique
+  phone              String               @unique
+  active             Boolean              @default(false)
+  notificationLevel  NotificationLevel    @default(all)
+  firstName          String
+  lastName           String?
+  Pupil              Pupil[]
+  Volunteer          Volunteer[]
+  AuthenticationData AuthenticationData[]
+  EmailNotifications EmailNotifications[]
+  TextNotifications  TextNotifications[]
 }
 
 model Pupil {
-    id          String      @id @default(cuid())
-    user        User        @relation(fields:[userId],references:[id])
-    userId      String
+  id                String              @id @default(cuid())
+  user              User                @relation(fields: [userId], references: [id])
+  userId            String
+  PupilMatchRequest PupilMatchRequest[]
 }
 
 model Volunteer {
-    id          String      @id @default(cuid())
-    user        User        @relation(fields:[userId],references:[id])
-    userId      String
-    offers      Offer[]
+  id                    String                  @id @default(cuid())
+  user                  User                    @relation(fields: [userId], references: [id])
+  userId                String
+  offers                Offer[]
+  VolunteerMatchRequest VolunteerMatchRequest[]
 }
 
 model Offer {
-    id          String      @id @default(cuid())
-    createdAt   DateTime    @default(now())
-    updatedAt   DateTime    @default(now())
-    volunteer   Volunteer   @relation(fields:[volunteerId],references:[id])
-    volunteerId String
-    description String
+  id                    String                  @id @default(cuid())
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @default(now())
+  volunteer             Volunteer               @relation(fields: [volunteerId], references: [id])
+  volunteerId           String
+  description           String
+  VolunteerMatchRequest VolunteerMatchRequest[]
 }
 
 model AuthenticationData {
-    id          String      @id @default(cuid())
-    user        User        @relation(fields:[userId],references:[id])
-    userId      String
-    password    String
+  id       String @id @default(cuid())
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String
+  password String
 }
 
-
 model PupilMatchRequest {
-    id          String      @id @default(cuid())
-    user        Pupil       @relation(fields:[requestor],references:[id])
-    requestor   String
-    parameters  String[]
+  id             String           @id @default(cuid())
+  user           Pupil            @relation(fields: [requestor], references: [id])
+  requestor      String
+  parameters     String[]
+  RequestMatches RequestMatches[]
 }
 
 model VolunteerMatchRequest {
-    id          String      @id @default(cuid())
-    user        Volunteer   @relation(fields:[requestor],references:[id])
-    requestor   String
-    parameters  String[]
-    offer       Offer       @relation(fields:[offerId],references:[id])
-    offerId     String
+  id             String           @id @default(cuid())
+  user           Volunteer        @relation(fields: [requestor], references: [id])
+  requestor      String
+  parameters     String[]
+  offer          Offer            @relation(fields: [offerId], references: [id])
+  offerId        String
+  RequestMatches RequestMatches[]
 }
 
 model RequestMatches {
-    id              String          @id @default(cuid())
-    pupilReq        PupilMatchRequest    @relation(fields:[pupilReqId],references:[id])
-    volunteerReq    VolunteerMatchRequest    @relation(fields:[volunteerReqId],references:[id])
-    pupilReqId      String
-    volunteerReqId  String
+  id             String                @id @default(cuid())
+  pupilReq       PupilMatchRequest     @relation(fields: [pupilReqId], references: [id])
+  volunteerReq   VolunteerMatchRequest @relation(fields: [volunteerReqId], references: [id])
+  pupilReqId     String
+  volunteerReqId String
 }
 
 model EmailNotifications {
-    id              String          @id @default(cuid())
-    template        String
-    priority        NotificationPriority    @default(low)
-    sender          String
-    recipient       User            @relation(fields:[recipientEmail],references:[email])
-    recipientEmail  String
-    recipientName   String
-    subject         String
-    variables       String
-    status          NotificationStatus @default(pending)
-    updatedAt       DateTime @updatedAt
+  id             String               @id @default(cuid())
+  template       String
+  priority       NotificationPriority @default(low)
+  sender         String
+  recipient      User                 @relation(fields: [recipientEmail], references: [email])
+  recipientEmail String
+  recipientName  String
+  subject        String
+  variables      String
+  status         NotificationStatus   @default(pending)
+  updatedAt      DateTime             @updatedAt
 }
 
-model TextNotifications{
-    id              String          @id @default(cuid())
-    recipient       User            @relation(fields:[recipientPhone],references:[phone])
-    recipientPhone  String
-    sender          String
-    text            String
-    status          NotificationStatus @default(pending)
-    updatedAt       DateTime @updatedAt
+model TextNotifications {
+  id             String             @id @default(cuid())
+  recipient      User               @relation(fields: [recipientPhone], references: [phone])
+  recipientPhone String
+  sender         String
+  text           String
+  status         NotificationStatus @default(pending)
+  updatedAt      DateTime           @updatedAt
 }
+
 enum NotificationLevel {
-    necessary
-    all
+  necessary
+  all
 }
 
 enum NotificationStatus {
-    sent
-    error
-    pending
+  sent
+  error
+  pending
 }
+
 enum NotificationPriority {
-    high
-    low
+  high
+  low
 }

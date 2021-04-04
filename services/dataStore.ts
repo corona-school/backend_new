@@ -21,6 +21,16 @@ export async function getPendingEmailNotifications() {
         },
     });
 }
+export async function getPendingEmailNotificationIds() {
+    return prisma.emailNotifications.findMany({
+        where: {
+            status: 'pending',
+        },
+        select: {
+            id: true,
+        },
+    });
+}
 
 export async function getPendingTextNotifications() {
     return prisma.textNotifications.findMany({
@@ -84,7 +94,7 @@ export async function addEmailNotification(
             });
             return {
                 status: 200,
-                res: notification.id,
+                res: notification.id.toString(),
             };
         } else {
             logError('Mail recipient ' + recipient + ' does not exist');

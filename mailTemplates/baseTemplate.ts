@@ -151,8 +151,8 @@ export abstract class baseTemplate {
             );
             this.notificationID = email.res;
             return {
-                status: 400,
-                res: 'Email added to the pending list',
+                status: 200,
+                res: this.notificationID,
             };
         } catch (e) {
             return {
