@@ -26,6 +26,7 @@ model User {
   Volunteer          Volunteer[]
   Notifications      EmailNotifications[]
   TextNotifications  TextNotifications[]
+  AuthenticationData AuthenticationData[]
 }
 
 model Pupil {
@@ -54,9 +55,11 @@ model Offer {
 }
 
 model AuthenticationData {
-  id       String @id @default(cuid())
-  userId   String @unique
-  password String
+  id           String         @id @default(cuid())
+  user         User           @relation(fields: [userId], references: [id])
+  userId       String
+  password     String
+  refreshToken RefreshToken[]
 }
 
 model PupilMatchRequest {
@@ -68,10 +71,11 @@ model PupilMatchRequest {
 }
 
 model RefreshToken {
-  id     String  @id @default(cuid())
-  userId String 
-  token  String  @unique
-  valid  Boolean @default(true)
+  id     String             @id @default(cuid())
+  token  String
+  valid  Boolean            @default(true)
+  authenticationData   AuthenticationData @relation(fields: [authId], references: [id])
+  authId String
 }
 
 model VolunteerMatchRequest {

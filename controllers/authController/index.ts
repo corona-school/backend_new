@@ -1,9 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import {
-    emailSchema,
-    loginSchema,
-    registerDataSchema,
-} from '../../utils/validationSchema';
+import { emailSchema, registerDataSchema } from '../../utils/validationSchema';
 import { logError, logInfo } from '../../services/logger';
 import {
     loginUser,
@@ -18,7 +14,9 @@ export const signup = async (
 ) => {
     const { error, value } = registerDataSchema.validate(req.body);
 
-    logInfo(`Started:: Register route with params ${JSON.parse(value)}`);
+    logInfo(
+        `Started:: Register route with params ${JSON.stringify(value, null, 4)}`
+    );
 
     if (error) {
         logError(`${error.message}`);
@@ -40,21 +38,22 @@ export const login = async (
     res: Response,
     next: NextFunction
 ) => {
-    const { error, value } = loginSchema.validate(req.body);
-    logInfo(`Started:: Login route with params ${JSON.parse(value)}`);
+    const { email, password } = req.body;
+    logInfo(
+        `Started:: Login route with params ${JSON.stringify(
+            { email, password },
+            null,
+            4
+        )}`
+    );
 
-    if (error) {
-        logError(`${error.message}`);
+    try {
+        const login = await loginUser({ email, password });
+        res.json({
+            response: login,
+        });
+    } catch (error) {
         next(new Error(error.message));
-    } else {
-        try {
-            const login = await loginUser(value);
-            res.json({
-                response: login,
-            });
-        } catch (error) {
-            next(new Error(error.message));
-        }
     }
 };
 
@@ -64,14 +63,20 @@ export const resetPassword = async (
     next: NextFunction
 ) => {
     const { error, value } = emailSchema.validate(req.body);
-    logInfo(`Started:: Forget password route with params ${JSON.parse(value)}`);
+    logInfo(
+        `Started:: Forget password route with params ${JSON.stringify(
+            value,
+            null,
+            4
+        )}`
+    );
 
     if (error) {
         logError(`${error.message}`);
         next(new Error(error.message));
     } else {
         try {
-            const resetPassword = passwordReset(value);
+            const resetPassword = await passwordReset(value);
             res.json({
                 response: resetPassword,
             });

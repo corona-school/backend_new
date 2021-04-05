@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { logError, logInfo } from './logger';
 import {
     addRefreshToken,
+    findUserByEmail,
     generateEmailLink,
     generatePasswordLink,
     getUserAuthData,
@@ -14,26 +15,25 @@ import { keys } from '../utils/secretKeys';
 
 const prisma = new PrismaClient();
 
-export interface IRegister {
+interface IRegister {
     firstName: string;
     lastName: string | null;
     email: string;
     password: string;
 }
 
-export interface ILogin {
+interface ILogin {
     email: string;
     password: string;
 }
 
-export const registerUser = async (userData: IRegister) => {
-    const { firstName, lastName, email, password } = userData;
-    const user = await prisma.user.findUnique({
-        where: {
-            email: email,
-        },
-    });
-
+export const registerUser = async ({
+    firstName,
+    lastName,
+    email,
+    password,
+}: IRegister) => {
+    const user = await findUserByEmail(email);
     if (user == null) {
         const createUser = await prisma.user.create({
             data: {
@@ -50,8 +50,12 @@ export const registerUser = async (userData: IRegister) => {
 
             await prisma.authenticationData.create({
                 data: {
-                    userId: createUser.id,
                     password: hash,
+                    user: {
+                        connect: {
+                            id: createUser.id,
+                        },
+                    },
                 },
             });
 
@@ -88,23 +92,12 @@ export const registerUser = async (userData: IRegister) => {
     }
 };
 
-export const loginUser = async (loginData: ILogin) => {
-    const { email, password } = loginData;
-    const user = await prisma.user.findUnique({
-        where: {
-            email: email,
-        },
-        select: {
-            id: true,
-            email: true,
-            firstName: true,
-        },
-    });
-
+export const loginUser = async ({ email, password }: ILogin) => {
+    const user = await findUserByEmail(email);
     if (user == null) {
         logError('User not found');
         return {
-            message: 'User not found',
+            message: 'Invalid email/password',
         };
     } else {
         const authData = await getUserAuthData(user.id);
@@ -116,13 +109,14 @@ export const loginUser = async (loginData: ILogin) => {
                     user.id,
                     keys.accessTokenKey
                 );
-                const validToken = await isRefreshTokenValid(user.id);
+                const validToken = await isRefreshTokenValid(authData.id);
+
                 if (validToken == null) {
                     const refreshToken = signRefreshToken(
                         user.id,
                         keys.refreshTokenKey
                     );
-                    addRefreshToken(user.id, refreshToken);
+                    await addRefreshToken(authData.id, refreshToken);
                     logInfo('Logged in successfully');
                     return {
                         message: {
@@ -130,6 +124,7 @@ export const loginUser = async (loginData: ILogin) => {
                             token: 'Refresh token added',
                         },
                         userId: user.id,
+                        authId: authData.id,
                         accessToken,
                         refreshToken,
                     };
@@ -154,17 +149,7 @@ export const loginUser = async (loginData: ILogin) => {
 };
 
 export const passwordReset = async (email: string) => {
-    const user = await prisma.user.findUnique({
-        where: {
-            email,
-        },
-        select: {
-            id: true,
-            email: true,
-            firstName: true,
-        },
-    });
-
+    const user = await findUserByEmail(email);
     if (user == null) {
         logError('Email not registered');
         throw new Error('Email not registered');

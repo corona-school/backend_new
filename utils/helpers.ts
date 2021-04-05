@@ -4,26 +4,46 @@ import { keys } from './secretKeys';
 
 const prisma = new PrismaClient();
 
-export const addRefreshToken = async (userid: string, token: string) => {
-    return await prisma.refreshToken.create({
-        data: {
-            userId: userid,
-            token: token,
+export const findUserByEmail = (email: string) => {
+    return prisma.user.findUnique({
+        where: {
+            email: email,
         },
     });
 };
 
-export const isRefreshTokenValid = (userid: string) => {
+export const findUserById = (userId: string) => {
+    return prisma.user.findUnique({
+        where: {
+            id: userId,
+        },
+    });
+};
+
+export const addRefreshToken = (authId: string, token: string) => {
+    return prisma.refreshToken.create({
+        data: {
+            token: token,
+            authenticationData: {
+                connect: {
+                    id: authId,
+                },
+            },
+        },
+    });
+};
+
+export const isRefreshTokenValid = (authId: string) => {
     return prisma.refreshToken.findFirst({
         where: {
-            userId: userid,
+            authId: authId,
             valid: true,
         },
     });
 };
 
-export const findEmailToUser = async (userid: string) => {
-    return await prisma.user
+export const findEmailToUser = (userid: string) => {
+    return prisma.user
         .findUnique({
             where: {
                 id: userid,
@@ -48,8 +68,8 @@ export const findEmailToUser = async (userid: string) => {
         });
 };
 
-export const findPhoneToUser = async (userid: string) => {
-    return await prisma.user
+export const findPhoneToUser = (userid: string) => {
+    return prisma.user
         .findUnique({
             where: {
                 id: userid,
@@ -102,12 +122,9 @@ export const generatePhoneLink = (user: User) => {
 };
 
 export const getUserAuthData = (userId: string) => {
-    return prisma.authenticationData.findUnique({
+    return prisma.authenticationData.findFirst({
         where: {
             userId,
-        },
-        select: {
-            password: true,
         },
     });
 };

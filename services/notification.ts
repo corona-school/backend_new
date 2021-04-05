@@ -15,7 +15,7 @@ export const sendNotification = (
 ): void => {
     const result = addEmailNotification(
         recipient,
-        DEFAULTSENDERS.noreply,
+        DEFAULTSENDERS.backend,
         content
     );
 };

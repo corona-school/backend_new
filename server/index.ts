@@ -8,7 +8,7 @@ import helmet from 'helmet';
 import hpp from 'hpp';
 import '../middlewares/auth';
 import { authentication } from '../routes/authRoute';
-import { refreshToken } from '../routes/tokenRefreshRoute';
+import { token } from '../routes/tokenRefreshRoute';
 import { userdata } from '../routes/userDataRoute';
 import { verification } from '../routes/verificationRoute';
 
@@ -22,7 +22,7 @@ app.use(helmet());
 ConfigureApollo(app);
 ConfigureREST(app);
 authentication(app);
-refreshToken(app);
+token(app);
 userdata(app);
 verification(app);
 

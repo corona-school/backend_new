@@ -11,11 +11,6 @@ export const emailSchema = Joi.object({
     email: Joi.string().email().required(),
 });
 
-export const loginSchema = Joi.object({
-    email: emailSchema,
-    password: passwordSchema,
-});
-
 export const registerDataSchema = Joi.object({
     firstName: Joi.string().min(1).max(25).required(),
     lastName: Joi.string(),
