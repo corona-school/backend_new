@@ -4,7 +4,7 @@
     "description": "",
     "main": "./build/server/index.js",
     "scripts": {
-        "test": "TS_NODE_FILES=true mocha -r ts-node/register './tests/**/*.test.ts' --exit",
+        "test": "tsc && TS_NODE_FILES=true mocha -r ts-node/register './tests/**/*.test.ts' --exit",
         "build": "tsc",
         "server:dev": "nodemon --config ./nodemon.json -r dotenv/config ./server/index.ts ",
         "migration:dev": "prisma migrate dev --preview-feature"

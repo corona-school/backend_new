@@ -3,7 +3,10 @@ import express from 'express';
 import cors from 'cors';
 import { ConfigureREST } from '../rest';
 import { ConfigureLogger, logError, logInfo } from '../services/logger';
-import { startNotificationHandler } from '../services/notificationHandler';
+import {
+    runNotificationHandlerOnce,
+    startNotificationHandler
+} from '../services/notificationHandler';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import { test_notification } from '../mailTemplates/test_notification';
@@ -21,54 +24,8 @@ app.listen(process.env.PORT, () =>
 );
 
 //Start the persistant notification handler.
-startNotificationHandler(10000);
-
-const email = new test_notification(
-    '"Corona School Team" <backend@corona-school.de>',
-    'ayush.pandey@corona-school.de',
-    { subject: 'Test Send Message', cust_name: 'Ayush' }
-);
-email
-    .defer()
-    .then((res) => {
-        logInfo(res.res);
-    })
-    .catch((err) => {
-        logError(err);
-    });
-/*
-const email = new test_notification(
-    '"Corona School Team" <backend@corona-school.de>',
-    'ayush.pandey@corona-school.de',
-    { subject: 'Forced Send Message', cust_name: 'Ayush' }
-);*/
-
-/*email
-    .defer()
-    .then((res) => {
-        logInfo(res.res);
-    })
-    .catch((err) => {
-        logError(err);
-    });*/
-//sendNotification('ayush.pandey@corona-school.de', 'Test Message', '2672994');
-//sendText('+4917687984735', 'Welcome to Corona school');
-
-/*
-addUser({
-    firstName: 'Ayush',
-    lastName: 'Pandey',
-    email: 'ayush.pandey@corona-school.de',
-}).then((response) => console.log(response));
-
-
-*/
-
-/*
-sendEmailNotification('ayush.pandey@corona-school.de', {
-    cust_name: 'Ayush',
-    subject: 'Hello',
-});*/
+//startNotificationHandler(10000);
+runNotificationHandlerOnce();
 
 function ConfigureCORS() {
     let requestOrigins;

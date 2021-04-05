@@ -20,11 +20,15 @@ if (process.env.MAILJET_SMS_API === undefined) {
 }
 
 export const startNotificationHandler = (interval: number) => {
-    logInfo('Started Notification Handler');
     setInterval(notificationHandler, interval);
 };
 
+export async function runNotificationHandlerOnce() {
+    await notificationHandler('');
+}
+
 async function notificationHandler(_action: string) {
+    logInfo('Started Notification Handler');
     try {
         const emailNotifications = await getPendingEmailNotifications();
         emailNotifications.forEach(

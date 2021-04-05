@@ -66,7 +66,7 @@ export abstract class baseTemplate {
 
             return {
                 status: 200,
-                res: 'Email sent successfully',
+                res: this.notificationID,
             };
         } catch (err) {
             return {
