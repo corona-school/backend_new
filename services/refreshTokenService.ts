@@ -7,7 +7,7 @@ import { signAccessToken, signRefreshToken } from '../utils/jwt_signature';
 import { keys } from '../utils/secretKeys';
 import { logError, logInfo } from './logger';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, RefreshToken } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -15,6 +15,8 @@ interface IRToken {
     userId: string;
     refreshToken: string;
 }
+
+let newAccessToken: string, newRefreshToken: string;
 
 export const tokenRefresh = async ({ userId, refreshToken }: IRToken) => {
     // Token cannot be empty or null
@@ -27,11 +29,6 @@ export const tokenRefresh = async ({ userId, refreshToken }: IRToken) => {
         logError('No userid supplied with the token');
         throw new Error('Error occurred');
     }
-
-    /* Checking the token in conjection with userID, if its exist then we can
-        further verifying it */
-
-    let newAccessToken: string, newRefreshToken: string;
     const authData = await getUserAuthData(userId);
 
     if (authData != null) {
@@ -50,16 +47,22 @@ export const tokenRefresh = async ({ userId, refreshToken }: IRToken) => {
                             if (err.name === 'TokenExpiredError') {
                                 logError('Whoops, your token has expired!');
 
-                                await prisma.refreshToken.update({
-                                    where: {
-                                        id: getUsertoken.id,
-                                    },
-                                    data: {
-                                        valid: false,
-                                    },
-                                });
+                                logInfo(
+                                    'Generating new pair of tokens after getting expired refresh token'
+                                );
+                                const getTokens = signTokens(authData.userId);
+                                updateTokenToFalse(getUsertoken);
 
-                                throw new Error(err.message);
+                                return addRefreshToken(
+                                    authData.id,
+                                    getTokens.refreshToken
+                                ).then((data) => {
+                                    return {
+                                        message: 'New tokens generated',
+                                        accessToken: getTokens.accessToken,
+                                        refreshToken: getTokens.refreshToken,
+                                    };
+                                });
                             }
 
                             if (err.name === 'JsonWebTokenError') {
@@ -68,35 +71,18 @@ export const tokenRefresh = async ({ userId, refreshToken }: IRToken) => {
                             }
                         }
 
-                        newAccessToken = signAccessToken(
-                            decoded.userid._id,
-                            keys.accessTokenKey
-                        );
-                        newRefreshToken = signRefreshToken(
-                            decoded.userid._id,
-                            keys.refreshTokenKey
-                        );
-
-                        /*We need to make the provided token false for the specific user(based on auth ID)*/
-                        // By this we can save already provied tokens in the DB for future use
-
-                        await prisma.refreshToken.update({
-                            where: {
-                                id: getUsertoken.id,
-                            },
-                            data: {
-                                valid: false,
-                            },
-                        });
+                        logInfo('Generating new pair of tokens');
+                        const getTokens = signTokens(decoded.userid._id);
+                        updateTokenToFalse(getUsertoken);
 
                         return addRefreshToken(
                             authData.id,
-                            newRefreshToken
+                            getTokens.refreshToken
                         ).then((data) => {
                             return {
                                 message: 'New tokens generated',
-                                accessToken: newAccessToken,
-                                refreshToken: newRefreshToken,
+                                accessToken: getTokens.accessToken,
+                                refreshToken: getTokens.refreshToken,
                             };
                         });
                     }
@@ -113,4 +99,26 @@ export const tokenRefresh = async ({ userId, refreshToken }: IRToken) => {
         logError('No user with the given userid');
         throw new Error('Error occurred while getting user token');
     }
+};
+
+const signTokens = (userId: any) => {
+    newAccessToken = signAccessToken(userId, keys.accessTokenKey);
+    newRefreshToken = signRefreshToken(userId, keys.refreshTokenKey);
+    return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+    };
+};
+
+const updateTokenToFalse = async (token: RefreshToken) => {
+    /*We need to make the provided token false for the specific user(based on auth ID)*/
+    // By this we can save already provied tokens in the DB for future use
+    await prisma.refreshToken.update({
+        where: {
+            id: token.id,
+        },
+        data: {
+            valid: false,
+        },
+    });
 };
