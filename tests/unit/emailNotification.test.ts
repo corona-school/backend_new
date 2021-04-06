@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { test_notification } from '../../mailTemplates/test_notification';
+import { test_notification } from '../../mailjet/templates/test_notification';
 import { getPendingEmailNotificationIds } from '../../services/dataStore';
 import { runNotificationHandlerOnce } from '../../services/notificationHandler';
 
@@ -26,7 +26,9 @@ describe('Test deferring email notifications', function () {
             );
         });
     });
+});
 
+describe('Test sending a forced email notification', function () {
     it('Sends a forced notification for template ID: 2672994', async function () {
         const notification = new test_notification(
             '"Corona School Team" <backend@corona-school.de>',

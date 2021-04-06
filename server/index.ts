@@ -6,7 +6,7 @@ import { ConfigureLogger } from '../services/logger';
 import { startNotificationHandler } from '../services/notificationHandler';
 import helmet from 'helmet';
 import hpp from 'hpp';
-import { test_notification } from '../mailTemplates/test_notification';
+import { test_notification } from '../mailjet/templates/test_notification';
 const app = express();
 
 ConfigureApollo(app);

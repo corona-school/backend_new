@@ -1,9 +1,9 @@
 import mailjet from 'node-mailjet';
-import { logError } from '../services/logger';
+import { logError } from '../../services/logger';
 import {
     addEmailNotification,
     markEmailNotification,
-} from '../services/dataStore';
+} from '../../services/dataStore';
 
 let mailjetEmailAPI: mailjet.Email.Client;
 if (

@@ -5,7 +5,7 @@ import {
 } from './dataStore';
 import { logError, logInfo } from './logger';
 import mailjet from 'node-mailjet';
-import { test_notification } from '../mailTemplates/test_notification';
+import { test_notification } from '../mailjet/templates/test_notification';
 
 let mailjetTextAPI: mailjet.SMS.Client;
 
