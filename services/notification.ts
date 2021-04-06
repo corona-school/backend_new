@@ -1,3 +1,4 @@
+
 import { addTextNotification } from './dataStore';
 
 const DEFAULTSENDERS = {
@@ -10,6 +11,9 @@ const DEFAULTSENDERS = {
 };
 
 
-export const sendText = (recipient: string, message: string): void => {
-    addTextNotification(DEFAULTSENDERS.sms, recipient, message);
+export const sendText = async (
+    recipient: string,
+    message: string
+): Promise<void> => {
+    await addTextNotification(DEFAULTSENDERS.sms, recipient, message);
 };

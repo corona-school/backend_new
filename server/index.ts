@@ -2,11 +2,8 @@ import { ConfigureApollo } from '../apollo';
 import express from 'express';
 import cors from 'cors';
 import { ConfigureREST } from '../rest';
-import { ConfigureLogger, logError, logInfo } from '../services/logger';
-import {
-    runNotificationHandlerOnce,
-    startNotificationHandler
-} from '../services/notificationHandler';
+import { ConfigureLogger } from '../services/logger';
+import { startNotificationHandler } from '../services/notificationHandler';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import { test_notification } from '../mailTemplates/test_notification';
@@ -24,8 +21,8 @@ app.listen(process.env.PORT, () =>
 );
 
 //Start the persistant notification handler.
-//startNotificationHandler(10000);
-runNotificationHandlerOnce();
+startNotificationHandler(10000);
+
 
 function ConfigureCORS() {
     let requestOrigins;
@@ -35,7 +32,7 @@ function ConfigureCORS() {
             'http://localhost:3000',
             'https://web-user-app-live.herokuapp.com',
             'https://web-user-app-dev.herokuapp.com',
-            /^https:\/\/cs-web-user-app-(pr-[0-9]+|br-[\-a-z0-9]+).herokuapp.com$/,
+            /^https:\/\/cs-web-user-app-(pr-[0-9]+|br-[-a-z0-9]+).herokuapp.com$/,
         ];
     } else {
         requestOrigins = [

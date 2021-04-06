@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-
 import { logError } from './logger';
 
 const prisma = new PrismaClient();
