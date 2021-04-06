@@ -127,7 +127,7 @@ export const resetPasswordVerify = async ({
 
     if (authData != null) {
         const secret = `${authData.password}${keys.accessTokenKey}`;
-        return jwt.verify(token, secret, (err: any, decoded: any) => {
+        return jwt.verify(token, secret, async (err: any, decoded: any) => {
             if (err != null) {
                 if (err.name === 'TokenExpiredError') {
                     logError('Whoops, your token has expired!');
@@ -147,30 +147,23 @@ export const resetPasswordVerify = async ({
             );
             // New password must be different from old password
             if (!isPasswordMatch) {
-                bcrypt.genSalt(10, (err, salt) => {
-                    bcrypt.hash(password, salt, async (err, hash) => {
-                        if (err) throw err;
+                let saltRounds = 10;
+                const salt = await bcrypt.genSalt(saltRounds);
+                const hash = await bcrypt.hash(password, salt);
 
-                        const updatedPass = await prisma.authenticationData.update(
-                            {
-                                where: {
-                                    id: authData.id,
-                                },
-                                data: {
-                                    password: hash,
-                                },
-                            }
-                        );
-
-                        logInfo(
-                            `Password has been updated for the user ${userId}`
-                        );
-                        return {
-                            data: updatedPass,
-                            message: `Password has been updated for the user ${userId}`,
-                        };
-                    });
+                const updatedPass = await prisma.authenticationData.update({
+                    where: {
+                        id: authData.id,
+                    },
+                    data: {
+                        password: hash,
+                    },
                 });
+
+                logInfo(`Password has been updated for the user ${userId}`);
+                return {
+                    message: `Password has been updated for the user ${userId}`,
+                };
             } else {
                 logError('New password cannot be an old password');
                 throw new Error('New password cannot be an old password');

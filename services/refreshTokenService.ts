@@ -49,6 +49,16 @@ export const tokenRefresh = async ({ userId, refreshToken }: IRToken) => {
                         if (err != null) {
                             if (err.name === 'TokenExpiredError') {
                                 logError('Whoops, your token has expired!');
+
+                                await prisma.refreshToken.update({
+                                    where: {
+                                        id: getUsertoken.id,
+                                    },
+                                    data: {
+                                        valid: false,
+                                    },
+                                });
+
                                 throw new Error(err.message);
                             }
 
@@ -68,6 +78,7 @@ export const tokenRefresh = async ({ userId, refreshToken }: IRToken) => {
                         );
 
                         /*We need to make the provided token false for the specific user(based on auth ID)*/
+                        // By this we can save already provied tokens in the DB for future use
 
                         await prisma.refreshToken.update({
                             where: {

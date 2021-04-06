@@ -10,6 +10,7 @@ export const refreshToken = async (
     const { refreshToken } = req.body;
     logInfo(`Started:: Refresh-token route with params ${refreshToken}`);
 
+    // Getting the user id from auth middleware
     const userId = (<any>req).user.userid._id;
 
     if (userId == null || userId == undefined) {

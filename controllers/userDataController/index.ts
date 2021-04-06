@@ -21,6 +21,7 @@ export const changeEmail = async (
 
     try {
         // Change email
+        // Getting the user id from auth middleware
         const userId = (<any>req).user.userid._id;
 
         if (userId == null || userId == undefined) {
@@ -56,7 +57,7 @@ export const changePhone = async (
     }
 
     try {
-        //getting the userid from auth middleware
+        // Getting the user id from auth middleware
         const userId = (<any>req).user.userid._id;
 
         if (userId == null || userId == undefined) {

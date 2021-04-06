@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 export const findUserByEmail = (email: string) => {
     return prisma.user.findUnique({
         where: {
-            email: email,
+            email,
         },
     });
 };
@@ -129,6 +129,26 @@ export const getUserAuthData = (userId: string) => {
     });
 };
 
-export const isEmailVerified = async (email: string) => {};
+export const isEmailVerified = (email: string) => {
+    return prisma.user.findUnique({
+        where: {
+            email,
+        },
+        select: {
+            email: true,
+            emailVerified: true,
+        },
+    });
+};
 
-export const isPhoneVerified = async (email: string) => {};
+export const isPhoneVerified = (phone: string) => {
+    return prisma.user.findUnique({
+        where: {
+            phone,
+        },
+        select: {
+            phone: true,
+            phoneVerified: true,
+        },
+    });
+};

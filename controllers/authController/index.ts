@@ -76,7 +76,8 @@ export const resetPassword = async (
         next(new Error(error.message));
     } else {
         try {
-            const resetPassword = await passwordReset(value);
+            const { email } = value;
+            const resetPassword = await passwordReset(email);
             res.json({
                 response: resetPassword,
             });
