@@ -9,9 +9,10 @@ import {
     getUserAuthData,
     isRefreshTokenValid,
 } from '../utils/helpers';
-import { sendNotification } from './notification';
 import { signAccessToken, signRefreshToken } from '../utils/jwt_signature';
 import { keys } from '../utils/secretKeys';
+import { verification } from '../mailjet/mailTemplates/verification';
+import { resetPasswordNotification } from '../mailjet/mailTemplates/resetPassword';
 
 const prisma = new PrismaClient();
 
@@ -44,7 +45,7 @@ export const registerUser = async ({
         });
 
         if (createUser != null) {
-            let saltRounds = 10;
+            const saltRounds = 10;
             const salt = await bcrypt.genSalt(saltRounds);
             const hash = await bcrypt.hash(password, salt);
 
@@ -62,7 +63,19 @@ export const registerUser = async ({
             logInfo(`${createUser.email} has been registered`);
             const emailLink = generateEmailLink(createUser);
 
-            sendNotification(
+            const verificationEmail = new verification(createUser.email, {
+                subject: 'Verify your email address',
+                firstname: createUser.firstName,
+                verification_email: emailLink,
+            });
+
+            try {
+                await verificationEmail.forced_send();
+            } catch (e) {
+                logError('Problem sending email. ' + e);
+            }
+
+            /*sendNotification(
                 createUser.email,
 
                 {
@@ -73,7 +86,7 @@ export const registerUser = async ({
                                         Please verify your email address using the following <a href=\"https://${emailLink}/\">link</a>!</h3><br /><h5>Best regards,
                                         Team corona-school</h5!`,
                 }
-            );
+            );*/
 
             logInfo(`Verification link : ${emailLink}`);
             logInfo('Verification email has been sent to the user');
@@ -162,7 +175,21 @@ export const passwordReset = async (email: string) => {
             const passwordResetlink = generatePasswordLink(user, authData);
             logInfo(`Password reset link: ${passwordResetlink}`);
 
-            sendNotification(user.email, {
+            const resetNotification = new resetPasswordNotification(
+                user.email,
+                {
+                    subject: 'Reset your password',
+                    firstname: user.firstName,
+                    verification_email: passwordResetlink,
+                }
+            );
+            try {
+                await resetNotification.forced_send();
+            } catch (e) {
+                logError('Problem sending email. ' + e);
+            }
+
+            /*sendNotification(user.email, {
                 Subject: 'Reset your password',
                 Message: `Dear ${user.firstName},
                                     Please click the following ${passwordResetlink} link to rest your account password`,
@@ -170,7 +197,7 @@ export const passwordReset = async (email: string) => {
                                     Please click the following <a href=\"https://${passwordResetlink}/\"> link to reset your account password</a>!</h3><br /><h5>Best regards,
                                     Team corona-school</h5!`,
             });
-
+            */
             logInfo('Password reset link has been sent');
 
             return { resetLink: passwordResetlink };

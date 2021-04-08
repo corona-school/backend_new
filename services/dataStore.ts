@@ -51,15 +51,24 @@ export async function addTextNotification(
             },
         });
 
-        return prisma.textNotifications.create({
+        const notification = await prisma.textNotifications.create({
             data: {
                 sender: sender,
                 recipientPhone: recipient,
                 text: message,
             },
         });
+
+        return {
+            status: 200,
+            res: notification.id.toString(),
+        };
     } catch (e) {
         logError('Problem adding the text message. Error:' + e);
+        return {
+            status: 400,
+            res: 'Problem adding text message. ' + e,
+        };
     }
 }
 

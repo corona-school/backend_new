@@ -11,7 +11,7 @@ import { authentication } from '../routes/authRoute';
 import { token } from '../routes/tokenRefreshRoute';
 import { userdata } from '../routes/userDataRoute';
 import { verification } from '../routes/verificationRoute';
-import { test_notification } from '../mailjet/templates/test_notification';
+import { test_notification } from '../mailjet/mailTemplates/test_notification';
 const app = express();
 
 app.use(express.json());
