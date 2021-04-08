@@ -1,49 +1,113 @@
 import {
     getPendingEmailNotifications,
     getPendingTextNotifications,
-    markEmailNotification,
     markTextNotification,
 } from './dataStore';
 import { logError, logInfo } from './logger';
-import { sendEmailHandler, sendSMSHandler } from '../mailjet';
+import mailjet from 'node-mailjet';
+import { test_notification } from '../mailjet/templates/test_notification';
 
-export const startNotificationHandler = (interval: number): void => {
-    logInfo('Started Notification Handler');
+let mailjetTextAPI: mailjet.SMS.Client;
+
+if (process.env.MAILJET_SMS_API === undefined) {
+    logError('Mailjet API not configured properly');
+} else {
+    mailjetTextAPI = mailjet.connect(process.env.MAILJET_SMS_API, {
+        url: 'api.mailjet.com',
+        version: 'v4',
+        perform_api_call: true,
+    });
+}
+
+export const startNotificationHandler = (interval: number) => {
     setInterval(notificationHandler, interval);
 };
 
-async function notificationHandler() {
+export async function runNotificationHandlerOnce() {
+    await notificationHandler('');
+}
+
+async function notificationHandler(_action: string) {
+    logInfo('Started Notification Handler');
     try {
-        const pendingEmailNotifications = await getPendingEmailNotifications();
-        await Promise.all(
-            pendingEmailNotifications.map((n) => {
-                try {
-                    sendEmailHandler(n);
-                    return markEmailNotification(n.id, 'sent');
-                } catch (err) {
-                    logError(`Email ${n.id} could note be sent, Error::${err}`);
-                    return markEmailNotification(n.id, 'error');
+        const emailNotifications = await getPendingEmailNotifications();
+        emailNotifications.forEach(
+            (notification: {
+                id: string;
+                sender: string;
+                recipientEmail: string;
+                subject: string;
+                status: string;
+                variables: string;
+                template: string;
+            }) => {
+                let email = undefined;
+                switch (notification.template) {
+                    case '2672994':
+                        {
+                            email = new test_notification(
+                                notification.sender,
+                                notification.recipientEmail,
+                                JSON.parse(notification.variables),
+                                notification.id
+                            );
+                        }
+                        break;
+                    default: {
+                        email = new test_notification(
+                            notification.sender,
+                            notification.recipientEmail,
+                            JSON.parse(notification.variables),
+                            notification.id
+                        );
+                    }
                 }
-            })
+                email
+                    .delayed_send()
+                    .then((res) => {
+                        logInfo('Sent Notification ' + notification.id);
+                    })
+                    .catch((err) => {
+                        logError(err);
+                    });
+            }
         );
-    } catch (err) {
-        logError(`Failed to handle email notifications, Error::${err}`);
+    } catch (e) {
+        logError('Problem getting notifications from the database. Error:' + e);
     }
 
     try {
-        const pendingTextNotifications = await getPendingTextNotifications();
-        await Promise.all(
-            pendingTextNotifications.map((n) => {
-                try {
-                    sendSMSHandler(n);
-                    return markTextNotification(n.id, 'sent');
-                } catch (err) {
-                    logError(`SMS ${n.id} could note be sent, Error::${err}`);
-                    return markTextNotification(n.id, 'error');
-                }
-            })
+        const textNotifications = await getPendingTextNotifications();
+        textNotifications.forEach(
+            (notification: {
+                id: string;
+                sender: string;
+                status: string;
+                recipientPhone: string;
+                text: string;
+            }) => {
+                const sendText = mailjetTextAPI.post('sms-send').request({
+                    Text: notification.text,
+                    To: notification.recipientPhone,
+                    From: notification.sender,
+                });
+
+                sendText
+                    .then((_response) => {
+                        markTextNotification(notification.id, 'sent');
+                    })
+                    .catch((err) => {
+                        markTextNotification(notification.id, 'error');
+                        logError(
+                            'Text ' +
+                                notification.id +
+                                ' Count not be sent, Error:: ' +
+                                err
+                        );
+                    });
+            }
         );
-    } catch (err) {
-        logError(`Failed to handle text notifications, Error::${err}`);
+    } catch (e) {
+        logError('Problem getting notifications from the database. Error:' + e);
     }
 }

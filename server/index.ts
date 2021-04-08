@@ -6,6 +6,7 @@ import { ConfigureLogger } from '../services/logger';
 import { startNotificationHandler } from '../services/notificationHandler';
 import helmet from 'helmet';
 import hpp from 'hpp';
+import { test_notification } from '../mailjet/templates/test_notification';
 const app = express();
 
 ConfigureApollo(app);
@@ -19,7 +20,9 @@ app.listen(process.env.PORT, () =>
     console.log(`Server listening on port ${process.env.PORT}`)
 );
 
+//Start the persistant notification handler.
 startNotificationHandler(10000);
+
 
 function ConfigureCORS() {
     let requestOrigins;
