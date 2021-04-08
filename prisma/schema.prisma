@@ -15,16 +15,18 @@ model User {
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @default(now())
   email              String               @unique
-  phone              String               @unique
+  emailVerified      Boolean              @default(false)
+  phone              String?              @unique
+  phoneVerified      Boolean              @default(false)
   active             Boolean              @default(false)
-  notificationLevel  NotificationLevel    @default(all)
   firstName          String
   lastName           String?
+  notificationLevel  NotificationLevel    @default(all)
   Pupil              Pupil[]
   Volunteer          Volunteer[]
-  AuthenticationData AuthenticationData[]
-  EmailNotifications EmailNotifications[]
+  Notifications      EmailNotifications[]
   TextNotifications  TextNotifications[]
+  AuthenticationData AuthenticationData[]
 }
 
 model Pupil {
@@ -53,10 +55,11 @@ model Offer {
 }
 
 model AuthenticationData {
-  id       String @id @default(cuid())
-  user     User   @relation(fields: [userId], references: [id])
-  userId   String
-  password String
+  id           String         @id @default(cuid())
+  user         User           @relation(fields: [userId], references: [id])
+  userId       String
+  password     String
+  refreshToken RefreshToken[]
 }
 
 model PupilMatchRequest {
@@ -65,6 +68,14 @@ model PupilMatchRequest {
   requestor      String
   parameters     String[]
   RequestMatches RequestMatches[]
+}
+
+model RefreshToken {
+  id     String             @id @default(cuid())
+  token  String
+  valid  Boolean            @default(true)
+  authenticationData   AuthenticationData @relation(fields: [authId], references: [id])
+  authId String
 }
 
 model VolunteerMatchRequest {

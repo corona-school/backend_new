@@ -1,20 +1,45 @@
 import { ConfigureApollo } from '../apollo';
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { ConfigureREST } from '../rest';
 import { ConfigureLogger } from '../services/logger';
 import { startNotificationHandler } from '../services/notificationHandler';
 import helmet from 'helmet';
 import hpp from 'hpp';
+import '../middlewares/auth';
+import { authentication } from '../routes/authRoute';
+import { token } from '../routes/tokenRefreshRoute';
+import { userdata } from '../routes/userDataRoute';
+import { verification } from '../routes/verificationRoute';
 import { test_notification } from '../mailjet/templates/test_notification';
 const app = express();
 
-ConfigureApollo(app);
-ConfigureREST(app);
+app.use(express.json());
 ConfigureLogger();
 ConfigureCORS();
 app.use(hpp());
 app.use(helmet());
+ConfigureApollo(app);
+ConfigureREST(app);
+authentication(app);
+token(app);
+userdata(app);
+verification(app);
+
+app.use((req, res, next) => {
+    const err = new Error('Not found');
+    next(err);
+});
+
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    res.status(500);
+    res.send({
+        error: {
+            name: err.name,
+            message: err.message,
+        },
+    });
+});
 
 app.listen(process.env.PORT, () =>
     console.log(`Server listening on port ${process.env.PORT}`)

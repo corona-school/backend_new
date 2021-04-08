@@ -3,5 +3,7 @@
 /.idea/
 /build/
 package_lock.json
+keys.ts
+.vscode
+/utils/secretKeys.ts
 *.log
-
