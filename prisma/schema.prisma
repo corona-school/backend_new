@@ -97,15 +97,17 @@ model RequestMatches {
 }
 
 model EmailNotifications {
-  id             String             @id @default(cuid())
+  id             String               @id @default(cuid())
+  template       String
+  priority       NotificationPriority @default(low)
   sender         String
-  recipient      User               @relation(fields: [recipientEmail], references: [email])
+  recipient      User                 @relation(fields: [recipientEmail], references: [email])
   recipientEmail String
   recipientName  String
   subject        String
-  textContent    String?
-  htmlContent    String?
-  status         NotificationStatus @default(pending)
+  variables      String
+  status         NotificationStatus   @default(pending)
+  updatedAt      DateTime             @updatedAt
 }
 
 model TextNotifications {
@@ -115,6 +117,7 @@ model TextNotifications {
   sender         String
   text           String
   status         NotificationStatus @default(pending)
+  updatedAt      DateTime           @updatedAt
 }
 
 enum NotificationLevel {
@@ -126,4 +129,9 @@ enum NotificationStatus {
   sent
   error
   pending
+}
+
+enum NotificationPriority {
+  high
+  low
 }

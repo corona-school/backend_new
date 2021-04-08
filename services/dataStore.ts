@@ -20,6 +20,16 @@ export async function getPendingEmailNotifications() {
         },
     });
 }
+export async function getPendingEmailNotificationIds() {
+    return prisma.emailNotifications.findMany({
+        where: {
+            status: 'pending',
+        },
+        select: {
+            id: true,
+        },
+    });
+}
 
 export async function getPendingTextNotifications() {
     return prisma.textNotifications.findMany({
@@ -41,53 +51,62 @@ export async function addTextNotification(
             },
         });
 
-        if (user?.phone) {
-            return prisma.textNotifications.create({
-                data: {
-                    sender: sender,
-                    recipientPhone: recipient,
-                    text: message,
-                },
-            });
-        } else {
-            logError('Text Message recipient ' + recipient + ' does not exist');
-        }
-    } catch (err) {
-        logError('Unable to fetch data from the database. Error:: ' + err);
+        return prisma.textNotifications.create({
+            data: {
+                sender: sender,
+                recipientPhone: recipient,
+                text: message,
+            },
+        });
+    } catch (e) {
+        logError('Problem adding the text message. Error:' + e);
     }
 }
 
 export async function addEmailNotification(
     recipient: string,
     sender: string,
-    content: { Subject: string; Message: string; HTMLContent?: string }
+    subject: string,
+    templateID: number,
+    variables: object,
+    status?: 'pending' | 'sent' | undefined,
+    priority?: 'high' | 'low' | undefined
 ) {
-    if (content.HTMLContent === undefined) {
-        content.HTMLContent = '';
-    }
-
     try {
         const user = await prisma.user.findUnique({
             where: {
                 email: recipient,
             },
         });
-        if (user) {
-            return prisma.emailNotifications.create({
+        if (user != null) {
+            const notification = await prisma.emailNotifications.create({
                 data: {
                     recipientName: user.firstName,
-                    recipientEmail: user.email,
+                    recipientEmail: recipient,
                     sender: sender,
-                    subject: content.Subject,
-                    textContent: content.Message,
-                    htmlContent: content.HTMLContent,
+                    subject: subject,
+                    variables: JSON.stringify(variables),
+                    template: templateID.toString(),
+                    status: status === undefined ? 'pending' : status,
+                    priority: priority === undefined ? 'low' : 'high',
                 },
             });
+            return {
+                status: 200,
+                res: notification.id.toString(),
+            };
         } else {
             logError('Mail recipient ' + recipient + ' does not exist');
+            return {
+                status: 400,
+                res: 'Mail recipient ' + recipient + ' does not exist',
+            };
         }
-    } catch (err) {
-        logError('Unable to add email notification. Error:: ' + err);
+    } catch (e) {
+        return {
+            status: 400,
+            res: 'Problem adding email to the pending list. Error:' + e,
+        };
     }
 }
 
