@@ -141,13 +141,13 @@ export const resetPasswordVerify = async ({
             }
 
             logInfo(`Reset token verified for the user ${userId}`);
-            let isPasswordMatch = bcrypt.compareSync(
+            const isPasswordMatch = bcrypt.compareSync(
                 password,
                 authData.password
             );
             // New password must be different from old password
             if (!isPasswordMatch) {
-                let saltRounds = 10;
+                const saltRounds = 10;
                 const salt = await bcrypt.genSalt(saltRounds);
                 const hash = await bcrypt.hash(password, salt);
 

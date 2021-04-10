@@ -11,7 +11,7 @@ import { authentication } from '../routes/authRoute';
 import { token } from '../routes/tokenRefreshRoute';
 import { userdata } from '../routes/userDataRoute';
 import { verification } from '../routes/verificationRoute';
-import { test_notification } from '../mailjet/mailTemplates/test_notification';
+
 const app = express();
 
 app.use(express.json());
@@ -25,6 +25,16 @@ authentication(app);
 token(app);
 userdata(app);
 verification(app);
+import { addUser } from '../services/dataStore';
+/*
+addUser({
+    firstName: 'ayush',
+    lastName: 'pandey',
+    email: 'ayush.pandey@corona-school.de',
+    phone: '+49017674853265',
+    notificationLevel: 'all',
+});
+*/
 
 app.use((req, res, next) => {
     const err = new Error('Not found');
@@ -41,13 +51,8 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     });
 });
 
-app.listen(process.env.PORT, () =>
-    console.log(`Server listening on port ${process.env.PORT}`)
-);
-
 //Start the persistant notification handler.
 startNotificationHandler(10000);
-
 
 function ConfigureCORS() {
     let requestOrigins;
@@ -73,3 +78,7 @@ function ConfigureCORS() {
 
     app.use(cors(options));
 }
+
+export const server = app.listen(process.env.PORT, () =>
+    console.log(`Server listening on port ${process.env.PORT}`)
+);

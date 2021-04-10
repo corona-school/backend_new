@@ -1,4 +1,4 @@
-import {baseTemplate, DEFAULTSENDERS} from './baseTemplate';
+import { baseTemplate, DEFAULTSENDERS } from './baseTemplate';
 
 export class test_notification extends baseTemplate {
     templateID = 2672994;

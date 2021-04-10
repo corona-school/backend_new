@@ -100,8 +100,8 @@ export const registerUser = async ({
             throw new Error('Error occured while creating a user');
         }
     } else {
-        logError(`${user.email} already exist`);
-        throw new Error('User email already exist');
+        logError(`${user.email} already exists`);
+        throw new Error('User email already exists');
     }
 };
 

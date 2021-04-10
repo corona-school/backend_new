@@ -1,7 +1,6 @@
 import { assert } from 'chai';
-import { test_notification } from '../../mailjet/mailTemplates/test_notification';
-import { getPendingEmailNotificationIds } from '../../services/dataStore';
-import { runNotificationHandlerOnce } from '../../services/notificationHandler';
+import { test_notification } from '../../../mailjet/mailTemplates/test_notification';
+import { getPendingEmailNotificationIds } from '../../../services/dataStore';
 
 describe('Test deferring email notifications', function () {
     it('Sends a deferred notification for template ID: 2672994', async function () {

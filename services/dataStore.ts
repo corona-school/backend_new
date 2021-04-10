@@ -13,6 +13,10 @@ export async function addUser(details: {
     return prisma.user.create({ data: details });
 }
 
+export async function getUserCount(){
+    return prisma.user.count();
+}
+
 export async function getPendingEmailNotifications() {
     return prisma.emailNotifications.findMany({
         where: {
