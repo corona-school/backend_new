@@ -5,9 +5,10 @@ import {
     generatePhoneLink,
 } from '../utils/helpers';
 import { logError, logInfo } from './logger';
-import { sendNotification, sendText } from './notification';
 
 import { PrismaClient } from '@prisma/client';
+import { verification } from '../mailjet/mailTemplates/verification';
+import { sms } from '../mailjet/smsTemplates/sms';
 const prisma = new PrismaClient();
 
 interface IChangeEmail {
@@ -35,15 +36,15 @@ export const emailChange = async ({ userId, email }: IChangeEmail) => {
             });
 
             const emailLink = generateEmailLink(updateEmail);
-
-            sendNotification(updateEmail.email, {
-                Subject: 'Verify your email address',
-                Message: `Dear ${updateEmail.firstName},
-                         Please verify your email address ${emailLink}`,
-                HTMLContent: `<h3>Dear ${updateEmail.firstName},</br>
-                         Please verify your email address using the following <a href=\"https://${emailLink}/\">link</a>!</h3><br /><h5>Best regards,
-                         Team corona-school</h5!`,
-            });
+            const updateEmailNotification = new verification(
+                updateEmail.email,
+                {
+                    subject: 'Verify your email address',
+                    firstname: updateEmail.firstName,
+                    verification_email: emailLink,
+                }
+            );
+            await updateEmailNotification.forced_send();
 
             logInfo(`Email change link : ${emailLink}`);
             logInfo(`Email has been sent`);
@@ -76,10 +77,11 @@ export const phoneChange = async ({ userId, phone }: IChangePhone) => {
             });
 
             const link = generatePhoneLink(phoneUpdate);
-            sendText(
+            const phoneChangeNotification = new sms(
                 phone,
                 `Hello ${phoneUpdate.firstName}, Verify your phone number by clicking ${link}`
             );
+            await phoneChangeNotification.forced_send();
 
             logInfo(`Phone change link : ${link}`);
             logInfo(`Phone notification has been sent`);
