@@ -6,7 +6,7 @@ import {
 import { logError, logInfo } from './logger';
 import mailjet from 'node-mailjet';
 import { test_notification } from '../mailjet/mailTemplates/test_notification';
-import { test_sms } from '../mailjet/smsTemplates/test_sms';
+import { sms } from '../mailjet/smsTemplates/sms';
 
 let mailjetTextAPI: mailjet.SMS.Client;
 
@@ -85,7 +85,7 @@ async function notificationHandler(_action: string) {
                 recipientPhone: string;
                 text: string;
             }) => {
-                const sendText = new test_sms(
+                const sendText = new sms(
                     notification.recipientPhone,
                     notification.text,
                     notification.id

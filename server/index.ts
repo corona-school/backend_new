@@ -26,7 +26,7 @@ token(app);
 userdata(app);
 verification(app);
 import { addUser } from '../services/dataStore';
-/*
+
 addUser({
     firstName: 'ayush',
     lastName: 'pandey',
@@ -34,7 +34,7 @@ addUser({
     phone: '+49017674853265',
     notificationLevel: 'all',
 });
-*/
+
 
 app.use((req, res, next) => {
     const err = new Error('Not found');

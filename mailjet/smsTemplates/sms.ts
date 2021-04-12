@@ -1,6 +1,6 @@
 import { baseTemplate } from '../smsTemplates/baseTemplate';
 
-export class test_sms extends baseTemplate {
+export class sms extends baseTemplate {
     notificationID: string;
     receiver: string;
     request: { Text: string; To: string; From: string };

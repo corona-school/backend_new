@@ -74,20 +74,6 @@ export const registerUser = async ({
             } catch (e) {
                 logError('Problem sending email. ' + e);
             }
-
-            /*sendNotification(
-                createUser.email,
-
-                {
-                    Subject: 'Verify your email address',
-                    Message: `Dear ${createUser.firstName},
-                                    Please verify your email address ${emailLink}`,
-                    HTMLContent: `<h3>Dear ${createUser.firstName},</br>
-                                        Please verify your email address using the following <a href=\"https://${emailLink}/\">link</a>!</h3><br /><h5>Best regards,
-                                        Team corona-school</h5!`,
-                }
-            );*/
-
             logInfo(`Verification link : ${emailLink}`);
             logInfo('Verification email has been sent to the user');
 
@@ -188,16 +174,6 @@ export const passwordReset = async (email: string) => {
             } catch (e) {
                 logError('Problem sending email. ' + e);
             }
-
-            /*sendNotification(user.email, {
-                Subject: 'Reset your password',
-                Message: `Dear ${user.firstName},
-                                    Please click the following ${passwordResetlink} link to rest your account password`,
-                HTMLContent: `<h3>Dear ${user.firstName},</br>
-                                    Please click the following <a href=\"https://${passwordResetlink}/\"> link to reset your account password</a>!</h3><br /><h5>Best regards,
-                                    Team corona-school</h5!`,
-            });
-            */
             logInfo('Password reset link has been sent');
 
             return { resetLink: passwordResetlink };

@@ -1,7 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 import { logError } from './logger';
 
-const prisma = new PrismaClient();
+class dataStore {
+    static prisma = new PrismaClient();
+}
+
+export async function findUser(email: string) {
+    return dataStore.prisma.user.findMany({
+        where: {
+            email: email,
+        },
+    });
+}
 
 export async function addUser(details: {
     firstName: string;
@@ -10,22 +20,22 @@ export async function addUser(details: {
     notificationLevel: 'all' | 'necessary';
     phone: string;
 }) {
-    return prisma.user.create({ data: details });
+    return dataStore.prisma.user.create({ data: details });
 }
 
-export async function getUserCount(){
-    return prisma.user.count();
+export async function getUserCount() {
+    return dataStore.prisma.user.count();
 }
 
 export async function getPendingEmailNotifications() {
-    return prisma.emailNotifications.findMany({
+    return dataStore.prisma.emailNotifications.findMany({
         where: {
             status: 'pending',
         },
     });
 }
 export async function getPendingEmailNotificationIds() {
-    return prisma.emailNotifications.findMany({
+    return dataStore.prisma.emailNotifications.findMany({
         where: {
             status: 'pending',
         },
@@ -36,7 +46,7 @@ export async function getPendingEmailNotificationIds() {
 }
 
 export async function getPendingTextNotifications() {
-    return prisma.textNotifications.findMany({
+    return dataStore.prisma.textNotifications.findMany({
         where: {
             status: 'pending',
         },
@@ -49,13 +59,13 @@ export async function addTextNotification(
     message: string
 ) {
     try {
-        const user = await prisma.user.findUnique({
+        const user = await dataStore.prisma.user.findUnique({
             where: {
                 phone: recipient,
             },
         });
 
-        const notification = await prisma.textNotifications.create({
+        const notification = await dataStore.prisma.textNotifications.create({
             data: {
                 sender: sender,
                 recipientPhone: recipient,
@@ -86,24 +96,26 @@ export async function addEmailNotification(
     priority?: 'high' | 'low' | undefined
 ) {
     try {
-        const user = await prisma.user.findUnique({
+        const user = await dataStore.prisma.user.findUnique({
             where: {
                 email: recipient,
             },
         });
         if (user != null) {
-            const notification = await prisma.emailNotifications.create({
-                data: {
-                    recipientName: user.firstName,
-                    recipientEmail: recipient,
-                    sender: sender,
-                    subject: subject,
-                    variables: JSON.stringify(variables),
-                    template: templateID.toString(),
-                    status: status === undefined ? 'pending' : status,
-                    priority: priority === undefined ? 'low' : 'high',
-                },
-            });
+            const notification = await dataStore.prisma.emailNotifications.create(
+                {
+                    data: {
+                        recipientName: user.firstName,
+                        recipientEmail: recipient,
+                        sender: sender,
+                        subject: subject,
+                        variables: JSON.stringify(variables),
+                        template: templateID.toString(),
+                        status: status === undefined ? 'pending' : status,
+                        priority: priority === undefined ? 'low' : 'high',
+                    },
+                }
+            );
             return {
                 status: 200,
                 res: notification.id.toString(),
@@ -127,7 +139,7 @@ export async function markEmailNotification(
     notificationId: string,
     status: 'sent' | 'error'
 ) {
-    return prisma.emailNotifications.update({
+    return dataStore.prisma.emailNotifications.update({
         where: {
             id: notificationId,
         },
@@ -141,7 +153,7 @@ export async function markTextNotification(
     notificationId: string,
     status: 'sent' | 'error'
 ) {
-    return prisma.textNotifications.update({
+    return dataStore.prisma.textNotifications.update({
         where: {
             id: notificationId,
         },
@@ -149,4 +161,27 @@ export async function markTextNotification(
             status: status,
         },
     });
+}
+
+//This function is only intended to be used for modifying data model during tests.
+//Please refrain from using this in general use for deleting users.
+export async function deleteUser(email: string) {
+    const user = await findUser(email);
+    await dataStore.prisma.authenticationData.deleteMany({
+        where: {
+            userId: user[0].id,
+        },
+    });
+    await dataStore.prisma.emailNotifications.deleteMany({
+        where: {
+            recipientEmail: email,
+        },
+    });
+    await dataStore.prisma.user.delete({
+        where: {
+            email: email,
+        },
+    });
+
+    return true;
 }

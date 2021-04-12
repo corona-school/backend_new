@@ -8,7 +8,7 @@ import { logError, logInfo } from './logger';
 
 import { PrismaClient } from '@prisma/client';
 import { verification } from '../mailjet/mailTemplates/verification';
-import { test_sms } from '../mailjet/smsTemplates/test_sms';
+import { sms } from '../mailjet/smsTemplates/sms';
 const prisma = new PrismaClient();
 
 interface IChangeEmail {
@@ -36,22 +36,16 @@ export const emailChange = async ({ userId, email }: IChangeEmail) => {
             });
 
             const emailLink = generateEmailLink(updateEmail);
-            const updateEmailNoti = new verification(updateEmail.email, {
-                subject: 'Verify your email address',
-                firstname: updateEmail.firstName,
-                verification_email: emailLink,
-            });
-            await updateEmailNoti.forced_send();
+            const updateEmailNotification = new verification(
+                updateEmail.email,
+                {
+                    subject: 'Verify your email address',
+                    firstname: updateEmail.firstName,
+                    verification_email: emailLink,
+                }
+            );
+            await updateEmailNotification.forced_send();
 
-            /*sendNotification(updateEmail.email, {
-                Subject: 'Verify your email address',
-                Message: `Dear ${updateEmail.firstName},
-                         Please verify your email address ${emailLink}`,
-                HTMLContent: `<h3>Dear ${updateEmail.firstName},</br>
-                         Please verify your email address using the following <a href=\"https://${emailLink}/\">link</a>!</h3><br /><h5>Best regards,
-                         Team corona-school</h5!`,
-            });
-            */
             logInfo(`Email change link : ${emailLink}`);
             logInfo(`Email has been sent`);
             logInfo(`Email of the user ${updateEmail.id} has been updated`);
@@ -83,15 +77,11 @@ export const phoneChange = async ({ userId, phone }: IChangePhone) => {
             });
 
             const link = generatePhoneLink(phoneUpdate);
-            const phoneChangeNoti = new test_sms(
+            const phoneChangeNotification = new sms(
                 phone,
                 `Hello ${phoneUpdate.firstName}, Verify your phone number by clicking ${link}`
             );
-            await phoneChangeNoti.forced_send();
-            /*sendText(
-                phone,
-                `Hello ${phoneUpdate.firstName}, Verify your phone number by clicking ${link}`
-            );*/
+            await phoneChangeNotification.forced_send();
 
             logInfo(`Phone change link : ${link}`);
             logInfo(`Phone notification has been sent`);
