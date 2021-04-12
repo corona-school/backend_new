@@ -29,7 +29,6 @@ interface ILogin {
 
 export const registerUser = async ({
     firstName,
-    lastName,
     email,
     password,
 }: IRegister) => {
@@ -38,7 +37,6 @@ export const registerUser = async ({
         const createUser = await prisma.user.create({
             data: {
                 firstName,
-                lastName,
                 email,
             },
         });

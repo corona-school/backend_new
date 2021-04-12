@@ -1,6 +1,10 @@
 import express from 'express';
 import passport from 'passport';
-import { changeEmail, changePhone } from '../controllers/userDataController';
+import {
+    changeEmail,
+    changePhone,
+    saveUserData,
+} from '../controllers/userDataController';
 
 export const userdata = (app: express.Application): void => {
     const userDataApi = express.Router();
@@ -15,6 +19,11 @@ export const userdata = (app: express.Application): void => {
         '/change-phone',
         passport.authenticate('jwt', { session: false }),
         changePhone
+    );
+    userDataApi.post(
+        '/save-user',
+        passport.authenticate('jwt', { session: false }),
+        saveUserData
     );
 
     app.use('/user', userDataApi);

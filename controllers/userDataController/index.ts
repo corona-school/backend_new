@@ -1,7 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { emailSchema } from '../../utils/validationSchema';
 import { logError, logInfo } from '../../services/logger';
-import { emailChange, phoneChange } from '../../services/userService';
+import {
+    emailChange,
+    phoneChange,
+    deleteUserData,
+} from '../../services/userService';
 
 export const changeEmail = async (
     req: Request,
@@ -69,6 +73,63 @@ export const changePhone = async (
         res.json({
             response: updatePhone,
         });
+    } catch (error) {
+        next(new Error(error.message));
+    }
+};
+
+export const userDataDelete = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    logInfo(`Started:: Delete user route`);
+
+    try {
+        // Getting the user id from auth middleware
+        const userId = (<any>req).user.userid._id;
+
+        if (userId == null || userId == undefined) {
+            logError('Unable to get userID');
+            next(new Error('Unable to get userID'));
+        }
+
+        const userDelete = await deleteUserData({ userId });
+        res.json({
+            response: userDelete,
+        });
+    } catch (error) {
+        next(new Error(error.message));
+    }
+};
+
+export const saveUserData = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    logInfo(`Started:: Save user data route`);
+
+    try {
+        // Getting the user id from auth middleware
+        const userId = (<any>req).user.userid._id;
+
+        const updateOps = {};
+        const userData = req.body;
+
+        for (const keys of userData) {
+            console.log(keys);
+        }
+
+        // if (userId == null || userId == undefined) {
+        //     logError('Unable to get userID');
+        //     next(new Error('Unable to get userID'));
+        // }
+
+        // const userDelete = await deleteUserData({ userId });
+        // res.json({
+        //     response: userDelete,
+        // });
     } catch (error) {
         next(new Error(error.message));
     }
