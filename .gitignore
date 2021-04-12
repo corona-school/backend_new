@@ -7,3 +7,4 @@ keys.ts
 .vscode
 /utils/secretKeys.ts
 *.log
+**/logs
