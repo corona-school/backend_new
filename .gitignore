@@ -6,3 +6,4 @@ package_lock.json
 keys.ts
 .vscode
 *.log
+**/logs

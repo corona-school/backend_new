@@ -5,7 +5,8 @@ import {
 } from './dataStore';
 import { logError, logInfo } from './logger';
 import mailjet from 'node-mailjet';
-import { test_notification } from '../mailjet/templates/test_notification';
+import { test_notification } from '../mailjet/mailTemplates/test_notification';
+import { sms } from '../mailjet/smsTemplates/sms';
 
 let mailjetTextAPI: mailjet.SMS.Client;
 
@@ -20,6 +21,7 @@ if (process.env.MAILJET_SMS_API === undefined) {
 }
 
 export const startNotificationHandler = (interval: number) => {
+    logInfo('Started Notification Handler');
     setInterval(notificationHandler, interval);
 };
 
@@ -28,7 +30,6 @@ export async function runNotificationHandlerOnce() {
 }
 
 async function notificationHandler(_action: string) {
-    logInfo('Started Notification Handler');
     try {
         const emailNotifications = await getPendingEmailNotifications();
         emailNotifications.forEach(
@@ -46,7 +47,6 @@ async function notificationHandler(_action: string) {
                     case '2672994':
                         {
                             email = new test_notification(
-                                notification.sender,
                                 notification.recipientEmail,
                                 JSON.parse(notification.variables),
                                 notification.id
@@ -55,7 +55,6 @@ async function notificationHandler(_action: string) {
                         break;
                     default: {
                         email = new test_notification(
-                            notification.sender,
                             notification.recipientEmail,
                             JSON.parse(notification.variables),
                             notification.id
@@ -86,24 +85,18 @@ async function notificationHandler(_action: string) {
                 recipientPhone: string;
                 text: string;
             }) => {
-                const sendText = mailjetTextAPI.post('sms-send').request({
-                    Text: notification.text,
-                    To: notification.recipientPhone,
-                    From: notification.sender,
-                });
-
+                const sendText = new sms(
+                    notification.recipientPhone,
+                    notification.text,
+                    notification.id
+                );
                 sendText
-                    .then((_response) => {
-                        markTextNotification(notification.id, 'sent');
+                    .delayed_send()
+                    .then((res) => {
+                        logInfo('Sent Notification ' + notification.id);
                     })
                     .catch((err) => {
-                        markTextNotification(notification.id, 'error');
-                        logError(
-                            'Text ' +
-                                notification.id +
-                                ' Count not be sent, Error:: ' +
-                                err
-                        );
+                        logError(err);
                     });
             }
         );

@@ -1,12 +1,10 @@
 import { assert } from 'chai';
-import { test_notification } from '../../mailjet/templates/test_notification';
-import { getPendingEmailNotificationIds } from '../../services/dataStore';
-import { runNotificationHandlerOnce } from '../../services/notificationHandler';
+import { test_notification } from '../../../mailjet/mailTemplates/test_notification';
+import { getPendingEmailNotificationIds } from '../../../services/dataStore';
 
 describe('Test deferring email notifications', function () {
     it('Sends a deferred notification for template ID: 2672994', async function () {
         const notification = new test_notification(
-            '"Corona School Team" <backend@corona-school.de>',
             'ayush.pandey@corona-school.de',
             { subject: 'Test Send Message', cust_name: 'Ayush' }
         );
@@ -14,6 +12,7 @@ describe('Test deferring email notifications', function () {
             assert.deepEqual(
                 result.status,
                 200,
+
                 'Adding notification to deferred list failed'
             );
             const notificationId = result.res;
@@ -31,7 +30,6 @@ describe('Test deferring email notifications', function () {
 describe('Test sending a forced email notification', function () {
     it('Sends a forced notification for template ID: 2672994', async function () {
         const notification = new test_notification(
-            '"Corona School Team" <backend@corona-school.de>',
             'ayush.pandey@corona-school.de',
             { subject: 'Test Send Message', cust_name: 'Ayush' }
         );
