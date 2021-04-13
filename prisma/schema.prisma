@@ -71,11 +71,11 @@ model PupilMatchRequest {
 }
 
 model RefreshToken {
-  id     String             @id @default(cuid())
-  token  String
-  valid  Boolean            @default(true)
-  authenticationData   AuthenticationData @relation(fields: [authId], references: [id])
-  authId String
+  id                 String             @id @default(cuid())
+  token              String
+  valid              Boolean            @default(true)
+  authenticationData AuthenticationData @relation(fields: [authId], references: [id])
+  authId             String
 }
 
 model VolunteerMatchRequest {

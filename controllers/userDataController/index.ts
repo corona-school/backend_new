@@ -5,7 +5,9 @@ import {
     emailChange,
     phoneChange,
     deleteUserData,
+    userRegister,
 } from '../../services/userService';
+import { string } from 'joi';
 
 export const changeEmail = async (
     req: Request,
@@ -113,23 +115,17 @@ export const saveUserData = async (
     try {
         // Getting the user id from auth middleware
         const userId = (<any>req).user.userid._id;
-
-        const updateOps = {};
         const userData = req.body;
 
-        for (const keys of userData) {
-            console.log(keys);
+        if (userId == null || userId == undefined) {
+            logError('Unable to get userID');
+            next(new Error('Unable to get userID'));
         }
 
-        // if (userId == null || userId == undefined) {
-        //     logError('Unable to get userID');
-        //     next(new Error('Unable to get userID'));
-        // }
-
-        // const userDelete = await deleteUserData({ userId });
-        // res.json({
-        //     response: userDelete,
-        // });
+        const userUpdate = await userRegister(userData, userId);
+        res.json({
+            response: userUpdate,
+        });
     } catch (error) {
         next(new Error(error.message));
     }

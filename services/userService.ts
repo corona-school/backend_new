@@ -2,6 +2,7 @@ import {
     findEmailToUser,
     findPhoneToUser,
     findUserByEmail,
+    findUserById,
     generateEmailLink,
     generatePhoneLink,
     getUserAuthData,
@@ -112,82 +113,145 @@ export const deleteUserData = async ({ userId }: any) => {
     });
 
     const AuthData = await getUserAuthData(userId);
+    let deleteTextData,
+        transactionArray = [];
 
-    if (user != null && AuthData) {
+    if (user != null && AuthData != null) {
+        const deletePupilData = prisma.pupil.deleteMany({
+            where: {
+                userId: userId,
+            },
+        });
+
+        const deleteVolunteerData = prisma.volunteer.deleteMany({
+            where: {
+                userId: userId,
+            },
+        });
+
+        const deleteRefreshTokens = prisma.refreshToken.deleteMany({
+            where: {
+                authId: AuthData.id,
+            },
+        });
+
+        const deleteAuthData = prisma.authenticationData.deleteMany({
+            where: {
+                userId: userId,
+            },
+        });
+
+        const deleteEmailData = prisma.emailNotifications.deleteMany({
+            where: {
+                recipientEmail: user.email,
+            },
+        });
+
+        const deleteUser = prisma.user.delete({
+            where: {
+                id: userId,
+            },
+        });
+
+        transactionArray = [
+            deletePupilData,
+            deleteVolunteerData,
+            deleteEmailData,
+            deleteRefreshTokens,
+            deleteAuthData,
+            deleteUser,
+        ];
+
         if (user.phone != null) {
-            const deletePupilData = prisma.pupil.deleteMany({
-                where: {
-                    userId: userId,
-                },
-            });
-
-            const deleteVolunteerData = prisma.volunteer.deleteMany({
-                where: {
-                    userId: userId,
-                },
-            });
-
-            const deleteAuthData = prisma.authenticationData.deleteMany({
-                where: {
-                    userId: userId,
-                },
-            });
-
-            const deleteRefreshTokens = prisma.refreshToken.deleteMany({
-                where: {
-                    authId: AuthData.id,
-                },
-            });
-
-            const deleteEmailData = prisma.emailNotifications.deleteMany({
-                where: {
-                    recipientEmail: user.email,
-                },
-            });
-
             // we are using above user.phone != null because we don't need phone while registering the user, and if user wants to delete his/her account before completing his data(phone) we need that null otherwise below query expecting a string value over a null value from DB
-            const deleteTextData = prisma.textNotifications.deleteMany({
+            deleteTextData = prisma.textNotifications.deleteMany({
                 where: {
                     recipientPhone: user.phone,
                 },
             });
-
-            const deleteUser = prisma.user.delete({
-                where: {
-                    id: userId,
-                },
-            });
-
-            const transaction = await prisma.$transaction([
-                deletePupilData,
-                deleteVolunteerData,
-                deleteEmailData,
-                deleteTextData,
-                deleteAuthData,
-                deleteRefreshTokens,
-                deleteUser,
-            ]);
-
-            logInfo(`Delete transaction has been completed: ${transaction}`);
-            logInfo(`User ${user.email} has been deleted`);
-            return {
-                message: `User ${user.email} has been deleted`,
-            };
+            transactionArray.push(deleteTextData);
         }
+
+        const transaction = await prisma.$transaction(transactionArray);
+
+        logInfo(`Delete transaction has been completed`);
+        logInfo(`User ${user.email} has been deleted`);
+        return {
+            message: `User ${user.email} has been deleted`,
+        };
     } else {
         logError('No user found');
         throw new Error('No user found');
     }
 };
 
-export const userRegister = async (userData: User) => {
-    const findUser = await findUserByEmail(userData.email);
+export const userRegister = async (userData: any, userId: string) => {
+    const dataKeys: string[] | any = Object.keys(userData);
+    const findUser: User | null = await findUserById(userId);
+
     if (findUser == null) {
         //No user in our record, create a new user
         const createUser = await prisma.user.create({
             data: userData,
         });
 
-        console.log('====', createUser);
+        return {
+            data: createUser,
+            message: 'New user created',
+        };
+    } else {
+        const userUpdate = await prisma.user.update({
+            where: {
+                id: findUser.id,
+            },
+            data: userData,
+        });
+
+        if (dataKeys.includes('email')) {
+            if (userData['email'] != findUser.email) {
+                logInfo('Sending verification email yo updated email');
+                await prisma.user.update({
+                    where: {
+                        id: userUpdate.id,
+                    },
+                    data: {
+                        emailVerified: false,
+                    },
+                });
+                const emailLink = generateEmailLink(userUpdate);
+                const verificationEmail = new verification(userData['email'], {
+                    subject: 'Verify your email address',
+                    firstname: userUpdate.firstName,
+                    verification_email: emailLink,
+                });
+
+                await verificationEmail.forced_send();
+            }
+        }
+
+        if (dataKeys.includes('phone')) {
+            if (userData['phone'] != findUser.phone) {
+                logInfo('Sending verification message yo updated phone');
+                await prisma.user.update({
+                    where: {
+                        id: userUpdate.id,
+                    },
+                    data: {
+                        phoneVerified: false,
+                    },
+                });
+                const link = generatePhoneLink(userUpdate);
+                const phoneChangeNotification = new sms(
+                    userData['phone'],
+                    `Hello ${userUpdate.firstName}, Verify your phone number by clicking ${link}`
+                );
+                await phoneChangeNotification.forced_send();
+            }
+        }
+
+        return {
+            data: userUpdate,
+            message: 'User data has been updated',
+        };
     }
 };

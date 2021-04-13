@@ -4,6 +4,7 @@ import {
     changeEmail,
     changePhone,
     saveUserData,
+    userDataDelete,
 } from '../controllers/userDataController';
 
 export const userdata = (app: express.Application): void => {
@@ -21,7 +22,12 @@ export const userdata = (app: express.Application): void => {
         changePhone
     );
     userDataApi.post(
-        '/save-user',
+        '/delete',
+        passport.authenticate('jwt', { session: false }),
+        userDataDelete
+    );
+    userDataApi.post(
+        '/save',
         passport.authenticate('jwt', { session: false }),
         saveUserData
     );
