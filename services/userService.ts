@@ -113,10 +113,9 @@ export const deleteUserData = async ({ userId }: any) => {
     });
 
     const AuthData = await getUserAuthData(userId);
-    let deleteTextData,
-        transactionArray = [];
+    let transactionArray = [];
 
-    if (user != null && AuthData != null) {
+    if (user != null && AuthData != null && user.phone != null) {
         const deletePupilData = prisma.pupil.deleteMany({
             where: {
                 userId: userId,
@@ -153,31 +152,29 @@ export const deleteUserData = async ({ userId }: any) => {
             },
         });
 
+        // we are using above user.phone != null because we don't need phone while registering the user, and if user wants to delete his/her account before completing his data(phone) we need that null otherwise below query expecting a string value over a null value from DB
+        const deleteTextData = prisma.textNotifications.deleteMany({
+            where: {
+                recipientPhone: user.phone,
+            },
+        });
+
         transactionArray = [
             deletePupilData,
             deleteVolunteerData,
             deleteEmailData,
+            deleteTextData,
             deleteRefreshTokens,
             deleteAuthData,
             deleteUser,
         ];
 
-        if (user.phone != null) {
-            // we are using above user.phone != null because we don't need phone while registering the user, and if user wants to delete his/her account before completing his data(phone) we need that null otherwise below query expecting a string value over a null value from DB
-            deleteTextData = prisma.textNotifications.deleteMany({
-                where: {
-                    recipientPhone: user.phone,
-                },
-            });
-            transactionArray.push(deleteTextData);
-        }
-
-        const transaction = await prisma.$transaction(transactionArray);
+        await prisma.$transaction(transactionArray);
 
         logInfo(`Delete transaction has been completed`);
-        logInfo(`User ${user.email} has been deleted`);
+        logInfo(`User ${user.id} has been deleted`);
         return {
-            message: `User ${user.email} has been deleted`,
+            message: `User ${user.id} has been deleted`,
         };
     } else {
         logError('No user found');
@@ -185,21 +182,11 @@ export const deleteUserData = async ({ userId }: any) => {
     }
 };
 
-export const userRegister = async (userData: any, userId: string) => {
-    const dataKeys: string[] | any = Object.keys(userData);
+export const userUpdate = async (userData: any, userId: string) => {
+    const dataKeys: string[] = Object.keys(userData);
     const findUser: User | null = await findUserById(userId);
 
-    if (findUser == null) {
-        //No user in our record, create a new user
-        const createUser = await prisma.user.create({
-            data: userData,
-        });
-
-        return {
-            data: createUser,
-            message: 'New user created',
-        };
-    } else {
+    if (findUser != null) {
         const userUpdate = await prisma.user.update({
             where: {
                 id: findUser.id,
@@ -208,8 +195,9 @@ export const userRegister = async (userData: any, userId: string) => {
         });
 
         if (dataKeys.includes('email')) {
-            if (userData['email'] != findUser.email) {
+            if (findUser.email != userData['email']) {
                 logInfo('Sending verification email yo updated email');
+
                 await prisma.user.update({
                     where: {
                         id: userUpdate.id,
@@ -218,6 +206,7 @@ export const userRegister = async (userData: any, userId: string) => {
                         emailVerified: false,
                     },
                 });
+
                 const emailLink = generateEmailLink(userUpdate);
                 const verificationEmail = new verification(userData['email'], {
                     subject: 'Verify your email address',
@@ -230,7 +219,7 @@ export const userRegister = async (userData: any, userId: string) => {
         }
 
         if (dataKeys.includes('phone')) {
-            if (userData['phone'] != findUser.phone) {
+            if (findUser.phone != userData['phone']) {
                 logInfo('Sending verification message yo updated phone');
                 await prisma.user.update({
                     where: {
@@ -240,18 +229,38 @@ export const userRegister = async (userData: any, userId: string) => {
                         phoneVerified: false,
                     },
                 });
+
                 const link = generatePhoneLink(userUpdate);
                 const phoneChangeNotification = new sms(
                     userData['phone'],
-                    `Hello ${userUpdate.firstName}, Verify your phone number by clicking ${link}`
+                    `Hello ${userUpdate.firstName}, Verify your phone number by clicking \n ${link}`
                 );
                 await phoneChangeNotification.forced_send();
             }
         }
 
         return {
-            data: userUpdate,
+            data: userUpdate.id,
             message: 'User data has been updated',
         };
+    } else {
+        logError('No User found');
+        throw new Error('No user found');
+    }
+};
+
+export const userRegister = async (userData: any, userEmail: string) => {
+    const findUser: User | null = await findUserByEmail(userEmail);
+
+    if (findUser == null) {
+        //No user in our record, create a new user
+        const createUser = await prisma.user.create({
+            data: userData,
+        });
+
+        return createUser;
+    } else {
+        logError(`${findUser.email} already exists`);
+        throw new Error('User email already exists');
     }
 };

@@ -13,6 +13,7 @@ import { signAccessToken, signRefreshToken } from '../utils/jwt_signature';
 import { keys } from '../utils/secretKeys';
 import { verification } from '../mailjet/mailTemplates/verification';
 import { resetPasswordNotification } from '../mailjet/mailTemplates/resetPassword';
+import { userRegister } from './userService';
 
 const prisma = new PrismaClient();
 
@@ -33,59 +34,53 @@ export const registerUser = async ({
     email,
     password,
 }: IRegister) => {
-    const user = await findUserByEmail(email);
-    if (user == null) {
-        const createUser = await prisma.user.create({
+    const user = await userRegister(
+        {
+            firstName,
+            email,
+        },
+        email
+    );
+    if (user) {
+        const saltRounds = 10;
+        const salt = await bcrypt.genSalt(saltRounds);
+        const hash = await bcrypt.hash(password, salt);
+
+        await prisma.authenticationData.create({
             data: {
-                firstName,
-                email,
+                password: hash,
+                user: {
+                    connect: {
+                        id: user.id,
+                    },
+                },
             },
         });
 
-        if (createUser != null) {
-            const saltRounds = 10;
-            const salt = await bcrypt.genSalt(saltRounds);
-            const hash = await bcrypt.hash(password, salt);
+        logInfo(`${user.email} has been registered`);
+        const emailLink = generateEmailLink(user);
 
-            await prisma.authenticationData.create({
-                data: {
-                    password: hash,
-                    user: {
-                        connect: {
-                            id: createUser.id,
-                        },
-                    },
-                },
-            });
+        const verificationEmail = new verification(user.email, {
+            subject: 'Verify your email address',
+            firstname: user.firstName,
+            verification_email: emailLink,
+        });
 
-            logInfo(`${createUser.email} has been registered`);
-            const emailLink = generateEmailLink(createUser);
-
-            const verificationEmail = new verification(createUser.email, {
-                subject: 'Verify your email address',
-                firstname: createUser.firstName,
-                verification_email: emailLink,
-            });
-
-            try {
-                await verificationEmail.forced_send();
-            } catch (e) {
-                logError('Problem sending email. ' + e);
-            }
-            logInfo(`Verification link : ${emailLink}`);
-            logInfo('Verification email has been sent to the user');
-
-            return {
-                data: createUser,
-                message: 'User has been registered',
-            };
-        } else {
-            logError(`Error occured while creating a user`);
-            throw new Error('Error occured while creating a user');
+        try {
+            await verificationEmail.forced_send();
+        } catch (e) {
+            logError('Problem sending email. ' + e);
         }
+        logInfo(`Verification link : ${emailLink}`);
+        logInfo('Verification email has been sent to the user');
+
+        return {
+            data: user,
+            message: 'User has been registered',
+        };
     } else {
-        logError(`${user.email} already exists`);
-        throw new Error('User email already exists');
+        logError(`Error occured while creating a user`);
+        throw new Error('Error occured while creating a user');
     }
 };
 

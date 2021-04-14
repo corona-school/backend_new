@@ -3,7 +3,7 @@ import passport from 'passport';
 import {
     changeEmail,
     changePhone,
-    saveUserData,
+    updateUserData,
     userDataDelete,
 } from '../controllers/userDataController';
 
@@ -29,7 +29,7 @@ export const userdata = (app: express.Application): void => {
     userDataApi.post(
         '/save',
         passport.authenticate('jwt', { session: false }),
-        saveUserData
+        updateUserData
     );
 
     app.use('/user', userDataApi);

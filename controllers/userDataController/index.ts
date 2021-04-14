@@ -6,8 +6,8 @@ import {
     phoneChange,
     deleteUserData,
     userRegister,
+    userUpdate,
 } from '../../services/userService';
-import { string } from 'joi';
 
 export const changeEmail = async (
     req: Request,
@@ -105,7 +105,7 @@ export const userDataDelete = async (
     }
 };
 
-export const saveUserData = async (
+export const updateUserData = async (
     req: Request,
     res: Response,
     next: NextFunction
@@ -122,9 +122,9 @@ export const saveUserData = async (
             next(new Error('Unable to get userID'));
         }
 
-        const userUpdate = await userRegister(userData, userId);
+        const update_user = await userUpdate(userData, userId);
         res.json({
-            response: userUpdate,
+            response: update_user,
         });
     } catch (error) {
         next(new Error(error.message));
