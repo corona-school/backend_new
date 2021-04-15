@@ -43,7 +43,7 @@ jobs:
           cmd: build # will run `yarn build` command
       - uses: borales/actions-yarn@v2.0.0
         env:
-         DATABASE_URL : ${{ secrets.DatabaseUrl }}
+         DATABASE_URL : ${{ build.DatabaseUrl }}
         with:
           cmd: migrate # will run `yarn migrate` command
           
