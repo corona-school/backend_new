@@ -34,7 +34,6 @@ jobs:
          ACCESS_TOKEN_KEY : ${{ secrets.ACCESS_TOKEN_KEY }}
          REFRESH_TOKEN_KEY : ${{ secrets.REFRESH_TOKEN_KEY }}
          DATABASE_URL : ${{ secrets.DATABASE_URL }}
-         PORT : ${{ secrets.PORT }}
          MAILJET_API : ${{ secrets.MAILJET_API }}
          MAILJET_SECRET : ${{ secrets.MAILJET_SECRET }}
          MAILJET_SMS_API : ${{ secrets.MAILJET_SMS_API }}
