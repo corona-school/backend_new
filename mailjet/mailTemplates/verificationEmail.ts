@@ -1,6 +1,6 @@
 import { baseTemplate, DEFAULTSENDERS } from './baseTemplate';
 
-export class verification extends baseTemplate {
+export class verificationEmail extends baseTemplate {
     templateID = 2792964;
     notificationID: string;
     receiver: string;

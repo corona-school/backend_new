@@ -30,7 +30,17 @@
     },
     "categories": {
         "default": {
-            "appenders": ["stderr-filtered", "stdout-filtered", "file-filtered"],
+            "appenders": [
+                "stderr-filtered",
+                "stdout-filtered",
+                "file-filtered"
+            ],
+            "level": "all"
+        },
+        "test": {
+            "appenders": [
+                "file-filtered"
+            ],
             "level": "all"
         }
     }

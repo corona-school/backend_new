@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { logError } from './logger';
+import bcrypt from 'bcrypt';
+import { isNull } from 'util';
 
 class dataStore {
     static prisma = new PrismaClient();
@@ -19,8 +21,32 @@ export async function addUser(details: {
     email: string;
     notificationLevel: 'all' | 'necessary';
     phone: string;
+    password: string;
 }) {
-    return dataStore.prisma.user.create({ data: details });
+    const user = await dataStore.prisma.user.create({
+        data: {
+            firstName: details.firstName,
+            lastName: details.lastName,
+            email: details.email,
+            phone: details.phone,
+        },
+    });
+
+    const saltRounds = 10;
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hash = await bcrypt.hash(details.password, salt);
+
+    const authdata = await dataStore.prisma.authenticationData.create({
+        data: {
+            password: hash,
+            user: {
+                connect: {
+                    id: user.id,
+                },
+            },
+        },
+    });
+    return user;
 }
 
 export async function getUserCount() {
@@ -167,6 +193,16 @@ export async function markTextNotification(
 //Please refrain from using this in general use for deleting users.
 export async function deleteUser(email: string) {
     const user = await findUser(email);
+    const authData = await dataStore.prisma.authenticationData.findMany({
+        where: {
+            userId: user[0].id,
+        },
+    });
+    await dataStore.prisma.refreshToken.deleteMany({
+        where: {
+            authId: authData[0].id,
+        },
+    });
     await dataStore.prisma.authenticationData.deleteMany({
         where: {
             userId: user[0].id,
@@ -184,4 +220,13 @@ export async function deleteUser(email: string) {
     });
 
     return true;
+}
+
+export async function getRefreshToken(authId: string) {
+    const tokens = await dataStore.prisma.refreshToken.findFirst({
+        where: {
+            authId: authId,
+        },
+    });
+    return tokens === null ? { token: undefined } : tokens;
 }
