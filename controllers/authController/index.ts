@@ -41,7 +41,7 @@ export const login = async (
     const { email, password } = req.body;
     logInfo(
         `Started:: Login route with params ${JSON.stringify(
-            { email, password },
+            { email },
             null,
             4
         )}`
