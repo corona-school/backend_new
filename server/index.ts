@@ -11,7 +11,7 @@ import { authentication } from '../routes/authRoute';
 import { token } from '../routes/tokenRefreshRoute';
 import { userdata } from '../routes/userDataRoute';
 import { verification } from '../routes/verificationRoute';
-import { test_notification } from '../mailjet/templates/test_notification';
+
 const app = express();
 
 app.use(express.json());
@@ -41,13 +41,8 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     });
 });
 
-app.listen(process.env.PORT, () =>
-    console.log(`Server listening on port ${process.env.PORT}`)
-);
-
 //Start the persistant notification handler.
 startNotificationHandler(10000);
-
 
 function ConfigureCORS() {
     let requestOrigins;
@@ -73,3 +68,7 @@ function ConfigureCORS() {
 
     app.use(cors(options));
 }
+
+export const server = app.listen(process.env.PORT, () =>
+    console.log(`Server listening on port ${process.env.PORT}`)
+);
