@@ -42,8 +42,11 @@ jobs:
         with:
           cmd: build # will run `yarn build` command
       - uses: borales/actions-yarn@v2.0.0
+        env:
+         DATABASE_URL : ${{ secrets.DatabaseUrl }}
         with:
           cmd: migrate # will run `yarn migrate` command
+          
       - uses: borales/actions-yarn@v2.0.0
         env:
          ACCESS_TOKEN_KEY : ${{ secrets.ACCESS_TOKEN_KEY }}
