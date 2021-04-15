@@ -11,7 +11,7 @@ import {
 } from '../utils/helpers';
 import { signAccessToken, signRefreshToken } from '../utils/jwt_signature';
 import { keys } from '../utils/secretKeys';
-import { verification } from '../mailjet/mailTemplates/verification';
+import { verificationEmail } from '../mailjet/mailTemplates/verificationEmail';
 import { resetPasswordNotification } from '../mailjet/mailTemplates/resetPassword';
 
 const prisma = new PrismaClient();
@@ -63,14 +63,17 @@ export const registerUser = async ({
             logInfo(`${createUser.email} has been registered`);
             const emailLink = generateEmailLink(createUser);
 
-            const verificationEmail = new verification(createUser.email, {
-                subject: 'Verify your email address',
-                firstname: createUser.firstName,
-                verification_email: emailLink,
-            });
+            const verificationNotification = new verificationEmail(
+                createUser.email,
+                {
+                    subject: 'Verify your email address',
+                    firstname: createUser.firstName,
+                    verification_email: emailLink,
+                }
+            );
 
             try {
-                await verificationEmail.forced_send();
+                await verificationNotification.forced_send();
             } catch (e) {
                 logError('Problem sending email. ' + e);
             }

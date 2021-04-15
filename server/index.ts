@@ -1,5 +1,5 @@
 import { ConfigureApollo } from '../apollo';
-import express, { Request, Response, NextFunction } from 'express';
+import express, {Request, Response, NextFunction, response} from 'express';
 import cors from 'cors';
 import { ConfigureREST } from '../rest';
 import { ConfigureLogger } from '../services/logger';
@@ -11,6 +11,7 @@ import { authentication } from '../routes/authRoute';
 import { token } from '../routes/tokenRefreshRoute';
 import { userdata } from '../routes/userDataRoute';
 import { verification } from '../routes/verificationRoute';
+import { verificationEmail } from '../mailjet/mailTemplates/verificationEmail';
 
 const app = express();
 
@@ -72,3 +73,16 @@ function ConfigureCORS() {
 export const server = app.listen(process.env.PORT, () =>
     console.log(`Server listening on port ${process.env.PORT}`)
 );
+
+const verificationEmailNotification = new verificationEmail(
+    'ayush.pandey@corona-school.de',
+    {
+        subject: 'Verify Your Email',
+        firstname: 'Ayush',
+        verification_email: 'www.google.com',
+    }
+);
+
+verificationEmailNotification.forced_send().then((response)=>{
+    console.log(response);
+})

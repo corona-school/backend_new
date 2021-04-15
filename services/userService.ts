@@ -7,7 +7,7 @@ import {
 import { logError, logInfo } from './logger';
 
 import { PrismaClient } from '@prisma/client';
-import { verification } from '../mailjet/mailTemplates/verification';
+import { verificationEmail } from '../mailjet/mailTemplates/verificationEmail';
 import { sms } from '../mailjet/smsTemplates/sms';
 const prisma = new PrismaClient();
 
@@ -36,7 +36,7 @@ export const emailChange = async ({ userId, email }: IChangeEmail) => {
             });
 
             const emailLink = generateEmailLink(updateEmail);
-            const updateEmailNotification = new verification(
+            const updateEmailNotification = new verificationEmail(
                 updateEmail.email,
                 {
                     subject: 'Verify your email address',

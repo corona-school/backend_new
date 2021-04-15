@@ -1,3 +1,4 @@
+process.env.NODE_ENV = 'test';
 import { assert } from 'chai';
 import { test_notification } from '../../../mailjet/mailTemplates/test_notification';
 import { getPendingEmailNotificationIds } from '../../../services/dataStore';
