@@ -2,13 +2,13 @@ import {
     addUser,
     deleteUser,
     getRefreshToken,
-} from '../../../services/dataStore';
+} from '../../../../services/dataStore';
 
 process.env.NODE_ENV = 'test';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 chai.use(chaiHttp);
-import { server } from './../../../server/index';
+import { server } from '../../../../server';
 
 describe('Checks if the auth route is available', function () {
     it('Checks if the auth route is setup properly.', function (done) {
@@ -47,8 +47,8 @@ describe('Checks if a user can login', function () {
     });
     it('Try logging in with an incorrect password', function (done) {
         const loginDetail = {
-            email: 'ayush.pandey@corona-school.de',
-            password: 'password',
+            email: 'ayushpandey@corona-school.de',
+            password: 'passwor',
         };
 
         chai.request(server)
@@ -58,8 +58,8 @@ describe('Checks if a user can login', function () {
             .end(async (error, response) => {
                 chai.assert.isNotNull(response.body.error);
                 chai.assert.equal(
-                    response.body.error.message,
-                    'Error occured while getting auth data'
+                    response.body.response.message,
+                    'Invalid email/password'
                 );
                 done();
             });
