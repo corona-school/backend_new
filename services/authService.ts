@@ -57,36 +57,20 @@ export const registerUser = async ({
             },
         });
 
-<<<<<<< HEAD
-            const verificationNotification = new verificationEmail(
-                createUser.email,
-                {
-                    subject: 'Verify your email address',
-                    firstname: createUser.firstName,
-                    verification_email: emailLink,
-                }
-            );
-
-            try {
-                await verificationNotification.forced_send();
-            } catch (e) {
-                logError('Problem sending email. ' + e);
-            }
-            logInfo(`Verification link : ${emailLink}`);
-            logInfo('Verification email has been sent to the user');
-=======
         logInfo(`${user.email} has been registered`);
         const emailLink = generateEmailLink(user);
 
-        const verificationEmail = new verification(user.email, {
-            subject: 'Verify your email address',
-            firstname: user.firstName,
-            verification_email: emailLink,
-        });
->>>>>>> af34e418bd6d6fede12683853c54285f597889c2
+        const verificationEmailNotification = new verificationEmail(
+            user.email,
+            {
+                subject: 'Verify your email address',
+                firstname: user.firstName,
+                verification_email: emailLink,
+            }
+        );
 
         try {
-            await verificationEmail.forced_send();
+            await verificationEmailNotification.forced_send();
         } catch (e) {
             logError('Problem sending email. ' + e);
         }
