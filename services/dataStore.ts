@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { logError } from './logger';
 import bcrypt from 'bcrypt';
-import { isNull } from 'util';
+import { token } from '../routes/tokenRefreshRoute';
 
 class dataStore {
     static prisma = new PrismaClient();
@@ -222,11 +222,25 @@ export async function deleteUser(email: string) {
     return true;
 }
 
-export async function getRefreshToken(authId: string) {
+export async function getRefreshTokenFromAuthId(authId: string) {
     const tokens = await dataStore.prisma.refreshToken.findFirst({
         where: {
             authId: authId,
         },
     });
     return tokens === null ? { token: undefined } : tokens;
+}
+
+export async function disconnectPrisma() {
+    await dataStore.prisma.$disconnect();
+}
+
+export async function getRefreshTokenObject(refreshToken: string) {
+    const tokenObject = await dataStore.prisma.refreshToken.findMany({
+        where: {
+            token: refreshToken,
+        },
+    });
+
+    return tokenObject.length === 0 ? [] : tokenObject;
 }

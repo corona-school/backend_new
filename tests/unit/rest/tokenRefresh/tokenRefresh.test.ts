@@ -1,8 +1,7 @@
 import {
     addUser,
     deleteUser,
-    findUser,
-    getRefreshTokenFromAuthId,
+    getRefreshTokenObject,
 } from '../../../../services/dataStore';
 
 process.env.NODE_ENV = 'test';
@@ -12,10 +11,10 @@ chai.use(chaiHttp);
 import { server } from '../../../../server';
 import { invalidUserEmail, validUser } from '../../../userConfiguration';
 
-describe('Checks if the auth route is available', function () {
-    it('Checks if the auth route is setup properly.', function (done) {
+describe('Checks if the token refresh route is available', function () {
+    it('Checks if the token refresh route is setup properly.', function (done) {
         chai.request(server)
-            .get('/auth/ping')
+            .get('/token_refresh/ping')
             .end((error, response) => {
                 try {
                     chai.assert.equal(
@@ -36,7 +35,7 @@ describe('Checks if the auth route is available', function () {
     });
 });
 
-describe('Checks if user can reset password', function () {
+describe('Try refreshing the token', async function () {
     before(async function () {
         const user = validUser;
         await addUser(user);
@@ -44,32 +43,31 @@ describe('Checks if user can reset password', function () {
     after(async function () {
         await deleteUser(validUser.email);
     });
-    it('Try refreshing the password for an account that does not exist', function (done) {
-        const userDetail = {
-            email: invalidUserEmail.email,
-        };
+    it('refreshes token for a user that is not logged in i.e. invalid refresh token', function (done) {
         const loginDetail = {
             email: validUser.email,
             password: validUser.password,
         };
-
         chai.request(server)
             .post('/auth/login')
             .type('json')
             .send(loginDetail)
             .end(async (error, response) => {
                 const accessToken = response.body.response.accessToken;
+                const invalidRefreshToken = {
+                    refreshToken: 'InvalidrefreshToken',
+                };
                 chai.request(server)
-                    .post('/auth/password_reset')
+                    .post('/token_refresh')
                     .set('Authorization', 'Bearer ' + accessToken)
                     .type('json')
-                    .send(userDetail)
+                    .send(invalidRefreshToken)
                     .end(async (error, response) => {
                         try {
                             chai.assert.isNotNull(response.body.error);
                             chai.assert.equal(
                                 response.body.error.message,
-                                'Email not registered'
+                                'Token/User is not valid'
                             );
                             done();
                         } catch (e) {
@@ -78,51 +76,50 @@ describe('Checks if user can reset password', function () {
                     });
             });
     });
-    it('Try refreshing the password for an account that does exist but with incorrect bearer token', function (done) {
-        const userDetail = {
-            email: validUser.email,
-        };
-        const accessToken = 'random_access_token';
-        chai.request(server)
-            .post('/auth/password_reset')
-            .set('Authorization', 'Bearer ' + accessToken)
-            .type('json')
-            .send(userDetail)
-            .end(async (error, response) => {
-                try {
-                    chai.assert.equal(response.error.status, 401);
-                    chai.assert.equal(response.error.text, 'Unauthorized');
-                    done();
-                } catch (e) {
-                    done(e);
-                }
-            });
-    });
+});
 
-    it('Try refreshing the password for an account that exists', function (done) {
-        const userDetail = {
-            email: validUser.email,
-        };
+describe('Try refreshing the token', async function () {
+    before(async function () {
+        const user = validUser;
+        await addUser(user);
+    });
+    after(async function () {
+        await deleteUser(validUser.email);
+    });
+    it('refreshes token for a user that is logged in i.e. valid refresh token', function (done) {
         const loginDetail = {
             email: validUser.email,
             password: validUser.password,
         };
-        const existingUserDetail = findUser(validUser.email);
         chai.request(server)
             .post('/auth/login')
             .type('json')
             .send(loginDetail)
             .end(async (error, response) => {
                 const accessToken = response.body.response.accessToken;
+                const refreshToken = response.body.response.refreshToken;
+                const refreshTokenObject = {
+                    refreshToken: refreshToken,
+                };
                 chai.request(server)
-                    .post('/auth/password_reset')
+                    .post('/token_refresh')
                     .set('Authorization', 'Bearer ' + accessToken)
                     .type('json')
-                    .send(userDetail)
+                    .send(refreshTokenObject)
                     .end(async (error, response) => {
                         try {
-                            chai.assert.isNotNull(
-                                response.body.response.resetLink
+                            chai.assert.equal(
+                                response.body.response.message,
+                                'New tokens generated',
+                                'Problem Generating new tokens. Improper message received'
+                            );
+                            const tokenObject = await getRefreshTokenObject(
+                                refreshToken
+                            );
+                            chai.assert.lengthOf(
+                                tokenObject,
+                                1,
+                                'Improper number of tokens in the databse'
                             );
                             done();
                         } catch (e) {
