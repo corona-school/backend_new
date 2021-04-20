@@ -9,17 +9,21 @@ describe('Test if the routes are setup properly.', function () {
         chai.request(server)
             .get('/rest/ping')
             .end((error, response) => {
-                chai.assert.equal(
-                    response.status,
-                    200,
-                    'Response status was not 200.'
-                );
-                chai.assert.equal(
-                    response.text,
-                    'pong',
-                    'Improper message sent'
-                );
-                done();
+                try {
+                    chai.assert.equal(
+                        response.status,
+                        200,
+                        'Response status was not 200.'
+                    );
+                    chai.assert.equal(
+                        response.text,
+                        'pong',
+                        'Improper message sent'
+                    );
+                    done();
+                } catch (e) {
+                    done(e);
+                }
             });
     });
 });
