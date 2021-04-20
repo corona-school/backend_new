@@ -1,14 +1,12 @@
-import {
-    addUser,
-    deleteUser,
-    findUser,
-    getPendingEmailNotifications,
-    getPendingTextNotifications,
-} from '../../../../services/dataStore';
+import { addUser, deleteUser, findUser } from '../../../../services/dataStore';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import { server } from '../../../../server';
-import { invalidUserEmail, validUser } from '../../../userConfiguration';
+import {
+    alternateUser,
+    invalidUserEmail,
+    validUser,
+} from '../../../userConfiguration';
 
 process.env.NODE_ENV = 'test';
 chai.use(chaiHttp);
@@ -37,15 +35,14 @@ describe('Checks if the user route is available', function () {
     });
 });
 
-describe('Try changing Email', function () {
+describe('Try changing user data', function () {
     before(async function () {
         await addUser(validUser);
     });
     after(async function () {
-        //Deleting the invalid email user because the test changes it to the incorrect email.
-        await deleteUser(invalidUserEmail.email);
+        await deleteUser(alternateUser.email);
     });
-    it('tries to change to an invalid email', function (done) {
+    it('tries to change all the data of the user', function (done) {
         const loginDetail = {
             email: validUser.email,
             password: validUser.password,
@@ -56,38 +53,37 @@ describe('Try changing Email', function () {
             .send(loginDetail)
             .end(async (error, response) => {
                 const accessToken = response.body.response.accessToken;
-                const notificationCount = (await getPendingEmailNotifications())
-                    .length;
                 chai.request(server)
-                    .post('/user/change-email')
+                    .post('/user/save')
                     .set('Authorization', 'Bearer ' + accessToken)
+                    .send(alternateUser)
                     .type('json')
-                    .send({ email: invalidUserEmail.email })
                     .end(async (error, response) => {
                         try {
                             chai.assert.equal(
                                 response.body.response.message,
-                                'Email has been updated',
-                                'Improper message returned'
+                                'User data has been updated',
+                                'Improper message received'
                             );
+                            const updateId = response.body.response.data;
                             const updatedUser = await findUser(
-                                invalidUserEmail.email
+                                alternateUser.email
                             );
-                            const updatedNotificationCount = (
-                                await getPendingEmailNotifications()
-                            ).length;
+
                             chai.assert.lengthOf(
                                 updatedUser,
                                 1,
-                                'Could not find Updated User. Possible update propagation issue'
+                                'Error in the user data. Does not match with the update'
                             );
                             chai.assert.equal(
-                                updatedNotificationCount,
-                                notificationCount + 1,
-                                'Email not sent?'
+                                updateId,
+                                updatedUser[0].id,
+                                'Incorrect user was updated?'
                             );
                             done();
                         } catch (e) {
+                            //This deletion is written to cleanup the add user in case the test fails to modify the user.
+                            await deleteUser(validUser.email);
                             done(e);
                         }
                     });

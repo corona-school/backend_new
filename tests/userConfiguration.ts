@@ -19,3 +19,18 @@ export const invalidUserEmail = {
     email: 'testuser@corona-school.de',
     password: 'password',
 };
+
+export const invalidUserPhone = {
+    firstName: 'test',
+    lastName: 'user',
+    email: 'test.user@corona-school.de',
+    password: 'password',
+    phone: '000000000001',
+};
+
+export const alternateUser = {
+    firstName: 'test1',
+    lastName: 'user1',
+    email: 'test1.user1@corona-school.de',
+    phone: '000000000001',
+};

@@ -115,7 +115,10 @@ export const deleteUserData = async ({ userId }: any) => {
     const AuthData = await getUserAuthData(userId);
     let transactionArray = [];
 
-    if (user != null && AuthData != null && user.phone != null) {
+    if (user != null && AuthData != null) {
+        // If the user registers for the first time,
+        // they dont give their phone numbers and then decide to delete the account,
+        // the check on phone number would always fail. The transaction array later has been modified too.
         const deletePupilData = prisma.pupil.deleteMany({
             where: {
                 userId: userId,
@@ -151,19 +154,23 @@ export const deleteUserData = async ({ userId }: any) => {
                 id: userId,
             },
         });
-
-        // we are using above user.phone != null because we don't need phone while registering the user, and if user wants to delete his/her account before completing his data(phone) we need that null otherwise below query expecting a string value over a null value from DB
-        const deleteTextData = prisma.textNotifications.deleteMany({
-            where: {
-                recipientPhone: user.phone,
-            },
-        });
+        // we are using above user.phone != null because we don't need phone while registering the user,
+        // and if user wants to delete his/her account before completing his data(phone)
+        // we need that null otherwise below query expecting a string value over a null value from DB
+        let deleteTextData = undefined;
+        if (user.phone !== null) {
+            deleteTextData = prisma.textNotifications.deleteMany({
+                where: {
+                    recipientPhone: user.phone,
+                },
+            });
+        }
 
         transactionArray = [
             deletePupilData,
             deleteVolunteerData,
             deleteEmailData,
-            deleteTextData,
+            ...(deleteTextData !== undefined ? [deleteTextData] : []),
             deleteRefreshTokens,
             deleteAuthData,
             deleteUser,
@@ -196,7 +203,7 @@ export const userUpdate = async (userData: any, userId: string) => {
 
         if (dataKeys.includes('email')) {
             if (findUser.email != userData['email']) {
-                logInfo('Sending verification email yo updated email');
+                logInfo('Sending verification email to updated email');
 
                 await prisma.user.update({
                     where: {

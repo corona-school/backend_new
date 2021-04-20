@@ -2,13 +2,16 @@ import {
     addUser,
     deleteUser,
     findUser,
-    getPendingEmailNotifications,
     getPendingTextNotifications,
 } from '../../../../services/dataStore';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import { server } from '../../../../server';
-import { invalidUserEmail, validUser } from '../../../userConfiguration';
+import {
+    invalidUserEmail,
+    invalidUserPhone,
+    validUser,
+} from '../../../userConfiguration';
 
 process.env.NODE_ENV = 'test';
 chai.use(chaiHttp);
@@ -37,13 +40,13 @@ describe('Checks if the user route is available', function () {
     });
 });
 
-describe('Try changing Email', function () {
+describe('Try changing Phone', function () {
     before(async function () {
         await addUser(validUser);
     });
     after(async function () {
-        //Deleting the invalid email user because the test changes it to the incorrect email.
-        await deleteUser(invalidUserEmail.email);
+        //Deleting the invalid email user becase the test changes it to the incorrect email.
+        await deleteUser(validUser.email);
     });
     it('tries to change to an invalid email', function (done) {
         const loginDetail = {
@@ -56,35 +59,34 @@ describe('Try changing Email', function () {
             .send(loginDetail)
             .end(async (error, response) => {
                 const accessToken = response.body.response.accessToken;
-                const notificationCount = (await getPendingEmailNotifications())
+                const notificationCount = (await getPendingTextNotifications())
                     .length;
                 chai.request(server)
-                    .post('/user/change-email')
+                    .post('/user/change-phone')
                     .set('Authorization', 'Bearer ' + accessToken)
                     .type('json')
-                    .send({ email: invalidUserEmail.email })
+                    .send({ phone: invalidUserPhone.phone })
                     .end(async (error, response) => {
                         try {
                             chai.assert.equal(
                                 response.body.response.message,
-                                'Email has been updated',
+                                'Phone number has been updated',
                                 'Improper message returned'
                             );
-                            const updatedUser = await findUser(
-                                invalidUserEmail.email
+                            const updatedUser = await findUser(validUser.email);
+                            chai.assert.equal(
+                                updatedUser[0].phone,
+                                invalidUserPhone.phone,
+                                'Phone number not updated?'
                             );
                             const updatedNotificationCount = (
-                                await getPendingEmailNotifications()
+                                await getPendingTextNotifications()
                             ).length;
-                            chai.assert.lengthOf(
-                                updatedUser,
-                                1,
-                                'Could not find Updated User. Possible update propagation issue'
-                            );
+
                             chai.assert.equal(
-                                updatedNotificationCount,
                                 notificationCount + 1,
-                                'Email not sent?'
+                                updatedNotificationCount,
+                                'Text not sent?'
                             );
                             done();
                         } catch (e) {
