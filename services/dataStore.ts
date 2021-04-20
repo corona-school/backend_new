@@ -239,6 +239,7 @@ export async function getRefreshTokenObject(refreshToken: string) {
     const tokenObject = await dataStore.prisma.refreshToken.findMany({
         where: {
             token: refreshToken,
+            valid: true,
         },
     });
 
