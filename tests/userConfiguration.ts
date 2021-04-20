@@ -4,7 +4,7 @@ export const validUser = {
     email: 'test.user@corona-school.de',
     password: 'password',
     notificationLevel: 'all' as const,
-    phone: '000000000000',
+    phone: '+4917674853265',
 };
 
 export const invalidUserPassword = {
@@ -25,12 +25,12 @@ export const invalidUserPhone = {
     lastName: 'user',
     email: 'test.user@corona-school.de',
     password: 'password',
-    phone: '000000000001',
+    phone: '+4917674853266',
 };
 
 export const alternateUser = {
     firstName: 'test1',
     lastName: 'user1',
     email: 'test1.user1@corona-school.de',
-    phone: '000000000001',
+    phone: '+4917674853266',
 };

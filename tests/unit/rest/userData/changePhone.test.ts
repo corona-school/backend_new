@@ -2,16 +2,12 @@ import {
     addUser,
     deleteUser,
     findUser,
-    getPendingTextNotifications,
+    getTextNotifications,
 } from '../../../../services/dataStore';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import { server } from '../../../../server';
-import {
-    invalidUserEmail,
-    invalidUserPhone,
-    validUser,
-} from '../../../userConfiguration';
+import { invalidUserPhone, validUser } from '../../../userConfiguration';
 
 process.env.NODE_ENV = 'test';
 chai.use(chaiHttp);
@@ -45,10 +41,9 @@ describe('Try changing Phone', function () {
         await addUser(validUser);
     });
     after(async function () {
-        //Deleting the invalid email user becase the test changes it to the incorrect email.
         await deleteUser(validUser.email);
     });
-    it('tries to change to an invalid email', function (done) {
+    it('tries to change the phone number', function (done) {
         const loginDetail = {
             email: validUser.email,
             password: validUser.password,
@@ -59,8 +54,6 @@ describe('Try changing Phone', function () {
             .send(loginDetail)
             .end(async (error, response) => {
                 const accessToken = response.body.response.accessToken;
-                const notificationCount = (await getPendingTextNotifications())
-                    .length;
                 chai.request(server)
                     .post('/user/change-phone')
                     .set('Authorization', 'Bearer ' + accessToken)
@@ -79,13 +72,13 @@ describe('Try changing Phone', function () {
                                 invalidUserPhone.phone,
                                 'Phone number not updated?'
                             );
-                            const updatedNotificationCount = (
-                                await getPendingTextNotifications()
-                            ).length;
+                            const updatedNotificationCount = await getTextNotifications(
+                                invalidUserPhone.phone
+                            );
 
                             chai.assert.equal(
-                                notificationCount + 1,
-                                updatedNotificationCount,
+                                updatedNotificationCount.length,
+                                1,
                                 'Text not sent?'
                             );
                             done();

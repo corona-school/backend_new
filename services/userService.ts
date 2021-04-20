@@ -84,8 +84,9 @@ export const phoneChange = async ({ userId, phone }: IChangePhone) => {
                 phone,
                 `Hello ${phoneUpdate.firstName}, Verify your phone number by clicking ${link}`
             );
-            await phoneChangeNotification.forced_send();
+            const phoneID = await phoneChangeNotification.forced_send();
 
+            logInfo(phoneID.res);
             logInfo(`Phone change link : ${link}`);
             logInfo(`Phone notification has been sent`);
 

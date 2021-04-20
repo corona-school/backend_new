@@ -2,8 +2,7 @@ import {
     addUser,
     deleteUser,
     findUser,
-    getPendingEmailNotifications,
-    getPendingTextNotifications,
+    getEmailNotifications,
 } from '../../../../services/dataStore';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
@@ -56,8 +55,6 @@ describe('Try changing Email', function () {
             .send(loginDetail)
             .end(async (error, response) => {
                 const accessToken = response.body.response.accessToken;
-                const notificationCount = (await getPendingEmailNotifications())
-                    .length;
                 chai.request(server)
                     .post('/user/change-email')
                     .set('Authorization', 'Bearer ' + accessToken)
@@ -73,17 +70,20 @@ describe('Try changing Email', function () {
                             const updatedUser = await findUser(
                                 invalidUserEmail.email
                             );
-                            const updatedNotificationCount = (
-                                await getPendingEmailNotifications()
-                            ).length;
                             chai.assert.lengthOf(
                                 updatedUser,
                                 1,
                                 'Could not find Updated User. Possible update propagation issue'
                             );
+
+                            const updatedNotificationCount = (
+                                await getEmailNotifications(
+                                    invalidUserEmail.email
+                                )
+                            ).length;
                             chai.assert.equal(
                                 updatedNotificationCount,
-                                notificationCount + 1,
+                                1,
                                 'Email not sent?'
                             );
                             done();

@@ -37,7 +37,8 @@ export abstract class baseTemplate {
             const sms = await addTextNotification(
                 this.sender,
                 this.receiver,
-                this.text
+                this.text,
+                'sent'
             );
             this.notificationID = sms.res;
 

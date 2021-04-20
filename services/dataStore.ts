@@ -60,6 +60,22 @@ export async function getPendingEmailNotifications() {
         },
     });
 }
+export async function getEmailNotifications(receiver: string) {
+    return dataStore.prisma.emailNotifications.findMany({
+        where: {
+            recipientEmail: receiver,
+        },
+    });
+}
+
+export async function getTextNotifications(receiver: string) {
+    return dataStore.prisma.textNotifications.findMany({
+        where: {
+            recipientPhone: receiver,
+        },
+    });
+}
+
 export async function getPendingEmailNotificationIds() {
     return dataStore.prisma.emailNotifications.findMany({
         where: {
@@ -82,7 +98,8 @@ export async function getPendingTextNotifications() {
 export async function addTextNotification(
     sender: string,
     recipient: string,
-    message: string
+    message: string,
+    status?: 'pending' | 'sent' | undefined
 ) {
     try {
         const user = await dataStore.prisma.user.findUnique({
@@ -96,6 +113,7 @@ export async function addTextNotification(
                 sender: sender,
                 recipientPhone: recipient,
                 text: message,
+                status: status === undefined ? 'pending' : status,
             },
         });
 
@@ -213,6 +231,13 @@ export async function deleteUser(email: string) {
             recipientEmail: email,
         },
     });
+    if (user[0].phone !== null) {
+        await dataStore.prisma.textNotifications.deleteMany({
+            where: {
+                recipientPhone: user[0].phone,
+            },
+        });
+    }
     await dataStore.prisma.user.delete({
         where: {
             email: email,
