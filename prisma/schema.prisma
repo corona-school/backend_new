@@ -1,13 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+generator client {
+  provider = "prisma-client-js"
+}
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
 }
 
 model User {
@@ -15,58 +12,93 @@ model User {
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @default(now())
   email              String               @unique
-  emailVerified      Boolean              @default(false)
-  phone              String?              @unique
-  phoneVerified      Boolean              @default(false)
-  active             Boolean              @default(false)
   firstName          String
   lastName           String?
+  active             Boolean              @default(false)
   notificationLevel  NotificationLevel    @default(all)
-  Pupil              Pupil[]
-  Volunteer          Volunteer[]
-  Notifications      EmailNotifications[]
-  TextNotifications  TextNotifications[]
+  phone              String?              @unique
+  emailVerified      Boolean              @default(false)
+  phoneVerified      Boolean              @default(false)
+  Admin              Admin[]
   AuthenticationData AuthenticationData[]
+  Notifications      EmailNotifications[]
+  Pupil              Pupil[]
+  TextNotifications  TextNotifications[]
+  UserRoles          UserRoles[]
+  Volunteer          Volunteer[]
 }
 
 model Pupil {
   id                String              @id @default(cuid())
-  user              User                @relation(fields: [userId], references: [id])
   userId            String
+  user              User                @relation(fields: [userId], references: [id])
   PupilMatchRequest PupilMatchRequest[]
 }
 
 model Volunteer {
   id                    String                  @id @default(cuid())
-  user                  User                    @relation(fields: [userId], references: [id])
   userId                String
+  user                  User                    @relation(fields: [userId], references: [id])
   offers                Offer[]
   VolunteerMatchRequest VolunteerMatchRequest[]
+}
+
+model Admin {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Roles {
+  id         String      @id @default(cuid())
+  name       String      @unique
+  autoassign Boolean     @default(false)
+  level      Int
+  UserRoles  UserRoles[]
+}
+
+model UserRoles {
+  id        String   @id @default(cuid())
+  createdOn DateTime @default(now())
+  userId    String
+  roleName  String
+  role      Roles    @relation(fields: [roleName], references: [name])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, roleName])
+}
+
+model Tasks {
+  id               String   @id @default(cuid())
+  name             String @unique
+  minLevelRequired Int
+  createdOn        DateTime @default(now())
+
 }
 
 model Offer {
   id                    String                  @id @default(cuid())
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @default(now())
-  volunteer             Volunteer               @relation(fields: [volunteerId], references: [id])
   volunteerId           String
   description           String
+  volunteer             Volunteer               @relation(fields: [volunteerId], references: [id])
   VolunteerMatchRequest VolunteerMatchRequest[]
 }
 
 model AuthenticationData {
   id           String         @id @default(cuid())
-  user         User           @relation(fields: [userId], references: [id])
   userId       String
   password     String
+  user         User           @relation(fields: [userId], references: [id])
   refreshToken RefreshToken[]
 }
 
 model PupilMatchRequest {
   id             String           @id @default(cuid())
-  user           Pupil            @relation(fields: [requestor], references: [id])
   requestor      String
   parameters     String[]
+  user           Pupil            @relation(fields: [requestor], references: [id])
   RequestMatches RequestMatches[]
 }
 
@@ -74,50 +106,50 @@ model RefreshToken {
   id                 String             @id @default(cuid())
   token              String
   valid              Boolean            @default(true)
-  authenticationData AuthenticationData @relation(fields: [authId], references: [id])
   authId             String
+  authenticationData AuthenticationData @relation(fields: [authId], references: [id])
 }
 
 model VolunteerMatchRequest {
   id             String           @id @default(cuid())
-  user           Volunteer        @relation(fields: [requestor], references: [id])
   requestor      String
   parameters     String[]
-  offer          Offer            @relation(fields: [offerId], references: [id])
   offerId        String
+  offer          Offer            @relation(fields: [offerId], references: [id])
+  user           Volunteer        @relation(fields: [requestor], references: [id])
   RequestMatches RequestMatches[]
 }
 
 model RequestMatches {
   id             String                @id @default(cuid())
-  pupilReq       PupilMatchRequest     @relation(fields: [pupilReqId], references: [id])
-  volunteerReq   VolunteerMatchRequest @relation(fields: [volunteerReqId], references: [id])
   pupilReqId     String
   volunteerReqId String
+  pupilReq       PupilMatchRequest     @relation(fields: [pupilReqId], references: [id])
+  volunteerReq   VolunteerMatchRequest @relation(fields: [volunteerReqId], references: [id])
 }
 
 model EmailNotifications {
   id             String               @id @default(cuid())
-  template       String
-  priority       NotificationPriority @default(low)
   sender         String
-  recipient      User                 @relation(fields: [recipientEmail], references: [email])
   recipientEmail String
-  recipientName  String
   subject        String
-  variables      String
   status         NotificationStatus   @default(pending)
+  recipientName  String
+  variables      String
+  priority       NotificationPriority @default(low)
+  template       String
   updatedAt      DateTime             @updatedAt
+  recipient      User                 @relation(fields: [recipientEmail], references: [email])
 }
 
 model TextNotifications {
   id             String             @id @default(cuid())
-  recipient      User               @relation(fields: [recipientPhone], references: [phone])
-  recipientPhone String
   sender         String
-  text           String
   status         NotificationStatus @default(pending)
+  recipientPhone String
+  text           String
   updatedAt      DateTime           @updatedAt
+  recipient      User               @relation(fields: [recipientPhone], references: [phone])
 }
 
 enum NotificationLevel {
@@ -134,4 +166,11 @@ enum NotificationStatus {
 enum NotificationPriority {
   high
   low
+}
+
+enum RolePriority {
+  admin
+  volunteer
+  pupil
+  user
 }

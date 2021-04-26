@@ -66,9 +66,11 @@ describe('Try changing Phone', function () {
                                 'Phone number has been updated',
                                 'Improper message returned'
                             );
-                            const updatedUser = await findUser(validUser.email);
+                            const updatedUsers = await findUser({
+                                email: validUser.email,
+                            });
                             chai.assert.equal(
-                                updatedUser[0].phone,
+                                updatedUsers.users[0].phone,
                                 invalidUserPhone.phone,
                                 'Phone number not updated?'
                             );

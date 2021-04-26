@@ -1,18 +1,57 @@
 import { PrismaClient } from '@prisma/client';
 import { logError } from './logger';
 import bcrypt from 'bcrypt';
-import { token } from '../routes/tokenRefreshRoute';
+import { token } from '../routes/tokenRefresh';
+import { User } from '../dataModel/types/user';
 
 class dataStore {
     static prisma = new PrismaClient();
 }
 
-export async function findUser(email: string) {
-    return dataStore.prisma.user.findMany({
+export async function findUser(
+    constraint: { id: string } | { email: string }
+): Promise<{ users: User[]; count: number }> {
+    const users = await dataStore.prisma.user.findMany({
+        where: constraint,
+    });
+    return { users: users, count: users.length };
+}
+
+export async function getUserRole(id: string) {
+    return dataStore.prisma.userRoles.groupBy({
+        by: ['roleName'],
         where: {
-            email: email,
+            userId: id,
         },
     });
+}
+
+export async function checkUserAllowedFor(userId: string, task: string) {
+    const taskDetail = await dataStore.prisma.tasks.findUnique({
+        where: {
+            name: task,
+        },
+    });
+    if (taskDetail === null) {
+        return false;
+    }
+
+    const userRole = await dataStore.prisma.userRoles.findMany({
+        where: {
+            userId: userId,
+        },
+        include: {
+            role: true,
+        },
+    });
+
+    const allowed = userRole.filter(
+        (roleDetail) => roleDetail.role.level <= taskDetail.minLevelRequired
+    );
+    if (allowed.length != 0) {
+        return true;
+    }
+    return false;
 }
 
 export async function addUser(details: {
@@ -207,13 +246,27 @@ export async function markTextNotification(
     });
 }
 
+export async function addTask(taskObject: {
+    name: string;
+    minLevelRequired: number;
+}) {
+    return dataStore.prisma.tasks.create({
+        data: taskObject,
+    });
+}
+export async function addRole(role: { name: string; level: number }) {
+    return dataStore.prisma.roles.create({
+        data: { name: role.name, level: role.level },
+    });
+}
+
 //This function is only intended to be used for modifying data model during tests.
 //Please refrain from using this in general use for deleting users.
 export async function deleteUser(email: string) {
-    const user = await findUser(email);
+    const foundUsers = await findUser({ email: email });
     const authData = await dataStore.prisma.authenticationData.findMany({
         where: {
-            userId: user[0].id,
+            userId: foundUsers.users[0].id,
         },
     });
     await dataStore.prisma.refreshToken.deleteMany({
@@ -223,7 +276,7 @@ export async function deleteUser(email: string) {
     });
     await dataStore.prisma.authenticationData.deleteMany({
         where: {
-            userId: user[0].id,
+            userId: foundUsers.users[0].id,
         },
     });
     await dataStore.prisma.emailNotifications.deleteMany({
@@ -231,13 +284,20 @@ export async function deleteUser(email: string) {
             recipientEmail: email,
         },
     });
-    if (user[0].phone !== null) {
+    if (foundUsers.users[0].phone !== null) {
         await dataStore.prisma.textNotifications.deleteMany({
             where: {
-                recipientPhone: user[0].phone,
+                recipientPhone: foundUsers.users[0].phone,
             },
         });
     }
+
+    await dataStore.prisma.userRoles.deleteMany({
+        where: {
+            userId: foundUsers.users[0].id,
+        },
+    });
+
     await dataStore.prisma.user.delete({
         where: {
             email: email,
@@ -269,4 +329,41 @@ export async function getRefreshTokenObject(refreshToken: string) {
     });
 
     return tokenObject.length === 0 ? [] : tokenObject;
+}
+
+export async function setupTestRoles() {
+    await dataStore.prisma.roles.createMany({
+        data: [
+            { name: 'unitTestPupil', level: 3 },
+            { name: 'unitTestVolunteer', level: 2 },
+            { name: 'unitTestAdmin', level: 1 },
+        ],
+    });
+    return true;
+}
+export async function setupTestUserRoles(id: string) {
+    await dataStore.prisma.userRoles.create({
+        data: { userId: id, roleName: 'unitTestAdmin' },
+    });
+}
+
+export async function deleteTestRoles() {
+    await dataStore.prisma.roles.deleteMany({
+        where: {
+            name: {
+                contains: 'unitTest',
+            },
+        },
+    });
+    return true;
+}
+export async function setupTestTasks() {
+    await dataStore.prisma.tasks.createMany({
+        data: [{ name: 'createRole', minLevelRequired: 1 }],
+    });
+    return true;
+}
+export async function tearDownTestTasks() {
+    await dataStore.prisma.tasks.deleteMany({});
+    return true;
 }

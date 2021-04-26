@@ -66,18 +66,18 @@ describe('Try changing user data', function () {
                                 'Improper message received'
                             );
                             const updateId = response.body.response.data;
-                            const updatedUser = await findUser(
-                                alternateUser.email
-                            );
+                            const updatedUsers = await findUser({
+                                email: alternateUser.email,
+                            });
 
-                            chai.assert.lengthOf(
-                                updatedUser,
+                            chai.assert.equal(
+                                updatedUsers.count,
                                 1,
                                 'Error in the user data. Does not match with the update'
                             );
                             chai.assert.equal(
                                 updateId,
-                                updatedUser[0].id,
+                                updatedUsers.users[0].id,
                                 'Incorrect user was updated?'
                             );
                             done();

@@ -1,0 +1,48 @@
+import { logError, logInfo } from '../../services/logger';
+import { Request, Response } from 'express';
+import {
+    addRole,
+    addTask,
+    checkUserAllowedFor,
+    findUser,
+    getUserRole,
+} from '../../services/dataStore';
+
+export const newRole = async (req: Request, res: Response) => {
+    logInfo(
+        `Started:: newRole route with params  ${JSON.stringify(
+            req.params,
+            null,
+            4
+        )}`
+    );
+
+    const userId = (<any>req).user.userid._id;
+
+    if (userId == null || userId == undefined) {
+        logError('unable to get userID');
+        res.status(404).send('Improper request');
+        return false;
+    }
+    try {
+        const userAllowed = await checkUserAllowedFor(userId, 'createRole');
+        if (!userAllowed) {
+            res.status(401).send(
+                'User not authorised to perform this operation'
+            );
+            return false;
+        }
+        const role = req.body;
+        const addedRole = await addRole(role);
+        if (Object.keys(addedRole).length == 0) {
+            res.status(200).send('Role exists already');
+            return false;
+        }
+        res.status(200).json(addedRole);
+        return true;
+    } catch (e) {
+        logError('Could not find user who sent the request. Error: ' + e);
+        res.send('Unexpected error when processing request');
+        return false;
+    }
+};

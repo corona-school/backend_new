@@ -107,7 +107,6 @@ describe('Checks if user can reset password', function () {
             email: validUser.email,
             password: validUser.password,
         };
-        const existingUserDetail = findUser(validUser.email);
         chai.request(server)
             .post('/auth/login')
             .type('json')
