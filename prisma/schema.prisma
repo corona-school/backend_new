@@ -51,6 +51,11 @@ model Offer {
   volunteer             Volunteer               @relation(fields: [volunteerId], references: [id])
   volunteerId           String
   description           String
+  title                 String
+  category              String
+  tags                  String[]
+  target_group          String
+  time                  DateTime
   VolunteerMatchRequest VolunteerMatchRequest[]
 }
 

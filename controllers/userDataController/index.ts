@@ -5,7 +5,6 @@ import {
     emailChange,
     phoneChange,
     deleteUserData,
-    userRegister,
     userUpdate,
 } from '../../services/userService';
 
@@ -26,7 +25,6 @@ export const changeEmail = async (
     const { email } = value;
 
     try {
-        // Change email
         // Getting the user id from auth middleware
         const userId = (<any>req).user.userid._id;
 

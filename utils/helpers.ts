@@ -1,4 +1,5 @@
 import { PrismaClient, User } from '@prisma/client';
+import { baseURL } from './baseURL';
 import { generateOnetimeToken, signForgotToken } from './jwt_signature';
 import { keys } from './secretKeys';
 
@@ -99,7 +100,7 @@ export const generateEmailLink = (user: User) => {
 
     const emailToken = generateOnetimeToken(user.id, secret);
 
-    const emailLink = `localhost:4001/verification/email/${user.id}/${emailToken}`;
+    const emailLink = `${baseURL}/email/${user.id}/${emailToken}`;
     return emailLink;
 };
 
@@ -108,7 +109,7 @@ export const generatePasswordLink = (user: any, authData: any) => {
 
     const forgotToken = signForgotToken(user.id, secret);
 
-    const passwordResetLink = `localhost:4001/verification/password/${user.id}/${forgotToken}`;
+    const passwordResetLink = `${baseURL}/password/${user.id}/${forgotToken}`;
     return passwordResetLink;
 };
 
@@ -117,7 +118,7 @@ export const generatePhoneLink = (user: User) => {
 
     const phoneToken = generateOnetimeToken(user.id, secret);
 
-    const phoneLink = `localhost:4001/verification/phone/${user.id}/${phoneToken}`;
+    const phoneLink = `${baseURL}/phone/${user.id}/${phoneToken}`;
     return phoneLink;
 };
 
@@ -149,6 +150,46 @@ export const isPhoneVerified = (phone: string) => {
         select: {
             phone: true,
             phoneVerified: true,
+        },
+    });
+};
+
+export const isVolunteer = (userId: string) => {
+    return prisma.volunteer.findFirst({
+        where: {
+            userId,
+        },
+    });
+};
+
+export const userToVolunteer = (userId: string) => {
+    return prisma.volunteer.create({
+        data: {
+            user: {
+                connect: {
+                    id: userId,
+                },
+            },
+        },
+    });
+};
+
+export const isPupil = (userId: string) => {
+    return prisma.pupil.findFirst({
+        where: {
+            userId,
+        },
+    });
+};
+
+export const userToPupil = async (userId: string) => {
+    return await prisma.pupil.create({
+        data: {
+            user: {
+                connect: {
+                    id: userId,
+                },
+            },
         },
     });
 };

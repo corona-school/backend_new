@@ -6,6 +6,8 @@ import {
     generateEmailLink,
     generatePhoneLink,
     getUserAuthData,
+    userToPupil,
+    userToVolunteer,
 } from '../utils/helpers';
 import { logError, logInfo } from './logger';
 
@@ -182,9 +184,33 @@ export const deleteUserData = async ({ userId }: any) => {
     }
 };
 
-export const userUpdate = async (userData: any, userId: string) => {
+interface IUserData {
+    email?: string;
+    emailVerified?: boolean;
+    phone?: string;
+    phoneVerified?: boolean;
+    active?: boolean;
+    firstName?: string;
+    lastName?: string;
+    userType?: string | undefined;
+}
+
+export const userUpdate = async (userData: IUserData, userId: string) => {
     const dataKeys: string[] = Object.keys(userData);
     const findUser: User | null = await findUserById(userId);
+
+    if (userData.userType != undefined) {
+        const type = userData.userType;
+        if (type == 'volunteer') {
+            await userToVolunteer(userId);
+        }
+
+        if (type == 'pupil') {
+            await userToPupil(userId);
+        }
+
+        delete userData.userType;
+    }
 
     if (findUser != null) {
         const userUpdate = await prisma.user.update({
@@ -194,9 +220,9 @@ export const userUpdate = async (userData: any, userId: string) => {
             data: userData,
         });
 
-        if (dataKeys.includes('email')) {
+        if (dataKeys.includes('email') && userData['email']) {
             if (findUser.email != userData['email']) {
-                logInfo('Sending verification email yo updated email');
+                logInfo('Sending verification email to updated email');
 
                 await prisma.user.update({
                     where: {
@@ -208,7 +234,7 @@ export const userUpdate = async (userData: any, userId: string) => {
                 });
 
                 const emailLink = generateEmailLink(userUpdate);
-                const verificationEmail = new verification(userData['email'], {
+                const verificationEmail = new verification(userData.email, {
                     subject: 'Verify your email address',
                     firstname: userUpdate.firstName,
                     verification_email: emailLink,
@@ -218,9 +244,9 @@ export const userUpdate = async (userData: any, userId: string) => {
             }
         }
 
-        if (dataKeys.includes('phone')) {
+        if (dataKeys.includes('phone') && userData['phone']) {
             if (findUser.phone != userData['phone']) {
-                logInfo('Sending verification message yo updated phone');
+                logInfo('Sending verification message to updated phone');
                 await prisma.user.update({
                     where: {
                         id: userUpdate.id,
