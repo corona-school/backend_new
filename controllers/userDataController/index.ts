@@ -90,7 +90,6 @@ export const userDataDelete = async (
     try {
         // Getting the user id from auth middleware
         const userId = (<any>req).user.userid._id;
-
         if (userId == null || userId == undefined) {
             logError('Unable to get userID');
             next(new Error('Unable to get userID'));

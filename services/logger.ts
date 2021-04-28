@@ -1,5 +1,16 @@
-import { configure, getLogger } from 'log4js';
-const logger = getLogger();
+import { configure, getLogger, Logger } from 'log4js';
+
+class loggerClass {
+    getLogger(): Logger {
+        if (process.env.NODE_ENV !== 'test') {
+            return getLogger();
+        } else {
+            return getLogger('test');
+        }
+    }
+}
+
+const logger = new loggerClass().getLogger();
 export const ConfigureLogger = (): void => {
     try {
         configure('./configuration/log.json');
