@@ -1,4 +1,4 @@
-import { baseTemplate } from '../smsTemplates/baseTemplate';
+import { baseTemplate } from './baseTemplate';
 
 export class sms extends baseTemplate {
     notificationID: string;

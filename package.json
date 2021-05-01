@@ -4,10 +4,10 @@
     "description": "",
     "main": "./build/server/index.js",
     "scripts": {
-        "test": "tsc && TS_NODE_FILES=true mocha -r ts-node/register './tests/**/*.test.ts' './tests/testTeardown.ts' --exit",
+        "test": "tsc && TS_NODE_FILES=true mocha -r ts-node/register 'src/tests/**/*.test.ts' './src/tests/testTeardown.ts' --exit",
         "build": "tsc",
-        "server:dev": "nodemon --config ./nodemon.json -r dotenv/config ./server/index.ts ",
-        "migration:dev": "prisma migrate dev --preview-feature"
+        "server:dev": "nodemon --config ./nodemon.json -r dotenv/config src/server/index.ts ",
+        "migration:dev": "src/prisma migrate dev --preview-feature"
     },
     "keywords": [],
     "author": "",

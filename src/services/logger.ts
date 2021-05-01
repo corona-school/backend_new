@@ -13,7 +13,7 @@ class loggerClass {
 const logger = new loggerClass().getLogger();
 export const ConfigureLogger = (): void => {
     try {
-        configure('./configuration/log.json');
+        configure('./src/configuration/log.json');
         console.info('Logger Configured');
     } catch (e) {
         console.warn('Logger could not be setup properly. ' + e);
