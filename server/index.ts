@@ -12,6 +12,7 @@ import { token } from '../routes/tokenRefresh';
 import { userdata } from '../routes/userData';
 import { verification } from '../routes/verification';
 import {roles} from "../routes/roles";
+import {tasks} from "../routes/tasks";
 
 const app = express();
 
@@ -27,6 +28,7 @@ token(app);
 userdata(app);
 verification(app);
 roles(app);
+tasks(app)
 
 app.use((req, res, next) => {
     const err = new Error('Not found');

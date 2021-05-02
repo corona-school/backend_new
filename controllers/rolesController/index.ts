@@ -2,10 +2,8 @@ import { logError, logInfo } from '../../services/logger';
 import { Request, Response } from 'express';
 import {
     addRole,
-    addTask, assignRoleToUser,
+    assignRoleToUser,
     checkUserAllowedFor,
-    findUser,
-    getUserRole,
 } from '../../services/dataStore';
 
 export const newRole = async (req: Request, res: Response) => {

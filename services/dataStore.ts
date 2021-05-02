@@ -24,6 +24,13 @@ export async function findRole(roleName: string) {
         },
     });
 }
+export async function findTask(taskName: string) {
+    return dataStore.prisma.tasks.findUnique({
+        where: {
+            name: taskName,
+        },
+    });
+}
 
 export async function getUserRole(id: string) {
     return dataStore.prisma.userRoles.groupBy({
@@ -32,6 +39,18 @@ export async function getUserRole(id: string) {
             userId: id,
         },
     });
+}
+
+export async function createTask(task: {
+    minLevelRequired: number;
+    name: string;
+}) {
+    if (task.minLevelRequired > 0) {
+        return await dataStore.prisma.tasks.create({
+            data: task,
+        });
+    }
+    return [];
 }
 
 export async function checkUserAllowedFor(userId: string, task: string) {
@@ -383,6 +402,7 @@ export async function setupTestTasks() {
         data: [
             { name: 'createRole', minLevelRequired: 1 },
             { name: 'assignRole', minLevelRequired: 1 },
+            { name: 'createTask', minLevelRequired: 1 },
         ],
     });
     return true;
