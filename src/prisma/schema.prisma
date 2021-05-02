@@ -34,6 +34,7 @@ model Pupil {
   user              User                @relation(fields: [userId], references: [id])
   userId            String
   PupilMatchRequest PupilMatchRequest[]
+  TuteeMatchRequests  TuteeMatchRequest[]
 }
 
 model Volunteer {
@@ -42,6 +43,7 @@ model Volunteer {
   userId                String
   offers                Offer[]
   VolunteerMatchRequest VolunteerMatchRequest[]
+  TutoringOffers        TutoringOffer[]
 }
 
 model Offer {
@@ -52,6 +54,16 @@ model Offer {
   volunteerId           String
   description           String
   VolunteerMatchRequest VolunteerMatchRequest[]
+}
+
+model TutoringOffer {
+  id                    String                  @id @default(cuid())
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @default(now())
+  volunteer             Volunteer               @relation(fields: [volunteerId], references: [id])
+  volunteerId           String
+  parameters            String
+  tutorMatchRequests     TutorMatchRequest[]
 }
 
 model AuthenticationData {
@@ -86,6 +98,37 @@ model VolunteerMatchRequest {
   offer          Offer            @relation(fields: [offerId], references: [id])
   offerId        String
   RequestMatches RequestMatches[]
+}
+
+model TutorMatchRequest {
+  id            String          @id @default(cuid())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @default(now())
+  validUntil    DateTime?
+  offer         TutoringOffer   @relation(fields: [offerId], references: [id])
+  offerId       String
+  match         TutoringMatch?
+}
+
+model TuteeMatchRequest {
+  id            String          @id @default(cuid())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @default(now())
+  tutee         Pupil           @relation(fields: [pupilId], references: [id])
+  pupilId       String
+  validUntil    DateTime?
+  parameters    String
+  match         TutoringMatch?
+}
+
+model TutoringMatch {
+  id                    String              @id @default(cuid())
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @default(now())
+  tutorMatchRequest     TutorMatchRequest   @relation(fields: [tutorMatchRequestId], references: [id])
+  tutorMatchRequestId   String
+  tuteeMatchRequest     TuteeMatchRequest   @relation(fields: [tuteeMatchRequestId], references: [id])
+  tuteeMatchRequestId   String
 }
 
 model RequestMatches {
