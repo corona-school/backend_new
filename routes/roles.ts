@@ -1,5 +1,5 @@
 import express from 'express';
-import { newRole } from '../controllers/rolesController';
+import { assignRole, newRole } from '../controllers/rolesController';
 import passport from 'passport';
 
 export const roles = (app: express.Application): void => {
@@ -9,6 +9,11 @@ export const roles = (app: express.Application): void => {
         '/new',
         passport.authenticate('jwt', { session: false }),
         newRole
+    );
+    rolesRoute.post(
+        '/assign',
+        passport.authenticate('jwt', { session: false }),
+        assignRole
     );
     app.use('/roles', rolesRoute);
 };

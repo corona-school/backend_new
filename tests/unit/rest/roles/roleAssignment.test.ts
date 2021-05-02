@@ -3,6 +3,7 @@ import {
     deleteTestRoles,
     deleteUser,
     findRole,
+    getUserRole,
     setupTestRoles,
     setupTestTasks,
     setupTestUserAdminRole,
@@ -17,7 +18,7 @@ chai.use(chaiHttp);
 import { server } from '../../../../server';
 import { invalidUserPhone, validUser } from '../../../userConfiguration';
 
-describe('Try to create roles', async function () {
+describe('Try to assign roles to user', async function () {
     before(async function () {
         const user = await addUser(validUser);
         await setupTestRoles();
@@ -29,7 +30,7 @@ describe('Try to create roles', async function () {
         await deleteTestRoles();
         await tearDownTestTasks();
     });
-    it('Create a role with login credentials that allow role creation', function (done) {
+    it('Assigns a role with login credentials that allow role assignment', function (done) {
         const loginDetail = {
             email: validUser.email,
             password: validUser.password,
@@ -41,20 +42,25 @@ describe('Try to create roles', async function () {
             .end(async (error, response) => {
                 const accessToken = response.body.response.accessToken;
                 chai.request(server)
-                    .post('/roles/new')
+                    .post('/roles/assign')
                     .set('Authorization', 'Bearer ' + accessToken)
                     .type('json')
-                    .send({ name: 'unitTest', level: 1 })
+                    .send({ role: 'unitTestVolunteer' })
                     .end(async (error, response) => {
                         try {
                             chai.assert.hasAllKeys(response.body, [
                                 'id',
-                                'name',
-                                'autoassign',
-                                'level',
+                                'userId',
+                                'roleName',
+                                'createdOn',
                             ]);
-                            const role = await findRole('unitTest');
-                            chai.assert.isNotNull(role, 'Role not created?');
+                            const userRoles = await getUserRole(
+                                response.body.userId
+                            );
+                            const roleNames = userRoles.map(
+                                (obj) => obj.roleName
+                            );
+                            chai.assert.include(roleNames, 'unitTestVolunteer');
                             done();
                         } catch (e) {
                             done(e);
@@ -77,7 +83,7 @@ describe('Try to create roles', async function () {
         await tearDownTestTasks();
     });
 
-    it('Create a role with login credentials that allow role creation', function (done) {
+    it('Create a role with login credentials that dont allow role assignment', function (done) {
         const loginDetail = {
             email: validUser.email,
             password: validUser.password,
@@ -89,10 +95,10 @@ describe('Try to create roles', async function () {
             .end(async (error, response) => {
                 const accessToken = response.body.response.accessToken;
                 chai.request(server)
-                    .post('/roles/new')
+                    .post('/roles/assign')
                     .set('Authorization', 'Bearer ' + accessToken)
                     .type('json')
-                    .send({ name: 'unitTest', level: 1 })
+                    .send({ role: 'unitTestVolunteer' })
                     .end(async (error, response) => {
                         try {
                             chai.assert.equal(response.status, 401);

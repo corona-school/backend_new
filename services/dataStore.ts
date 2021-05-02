@@ -17,6 +17,14 @@ export async function findUser(
     return { users: users, count: users.length };
 }
 
+export async function findRole(roleName: string) {
+    return dataStore.prisma.roles.findUnique({
+        where: {
+            name: roleName,
+        },
+    });
+}
+
 export async function getUserRole(id: string) {
     return dataStore.prisma.userRoles.groupBy({
         by: ['roleName'],
@@ -260,6 +268,12 @@ export async function addRole(role: { name: string; level: number }) {
     });
 }
 
+export async function assignRoleToUser(userId: string, roleName: string) {
+    return dataStore.prisma.userRoles.create({
+        data: { userId: userId, roleName: roleName },
+    });
+}
+
 //This function is only intended to be used for modifying data model during tests.
 //Please refrain from using this in general use for deleting users.
 export async function deleteUser(email: string) {
@@ -341,9 +355,16 @@ export async function setupTestRoles() {
     });
     return true;
 }
-export async function setupTestUserRoles(id: string) {
+
+export async function setupTestUserAdminRole(id: string) {
     await dataStore.prisma.userRoles.create({
         data: { userId: id, roleName: 'unitTestAdmin' },
+    });
+}
+
+export async function setupTestUserPupilRole(id: string) {
+    await dataStore.prisma.userRoles.create({
+        data: { userId: id, roleName: 'unitTestPupil' },
     });
 }
 
@@ -359,10 +380,14 @@ export async function deleteTestRoles() {
 }
 export async function setupTestTasks() {
     await dataStore.prisma.tasks.createMany({
-        data: [{ name: 'createRole', minLevelRequired: 1 }],
+        data: [
+            { name: 'createRole', minLevelRequired: 1 },
+            { name: 'assignRole', minLevelRequired: 1 },
+        ],
     });
     return true;
 }
+
 export async function tearDownTestTasks() {
     await dataStore.prisma.tasks.deleteMany({});
     return true;

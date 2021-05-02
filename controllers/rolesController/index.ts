@@ -2,7 +2,7 @@ import { logError, logInfo } from '../../services/logger';
 import { Request, Response } from 'express';
 import {
     addRole,
-    addTask,
+    addTask, assignRoleToUser,
     checkUserAllowedFor,
     findUser,
     getUserRole,
@@ -39,6 +39,45 @@ export const newRole = async (req: Request, res: Response) => {
             return false;
         }
         res.status(200).json(addedRole);
+        return true;
+    } catch (e) {
+        logError('Could not find user who sent the request. Error: ' + e);
+        res.send('Unexpected error when processing request');
+        return false;
+    }
+};
+
+export const assignRole = async (req: Request, res: Response) => {
+    logInfo(
+        `Started:: newRole route with params  ${JSON.stringify(
+            req.params,
+            null,
+            4
+        )}`
+    );
+
+    const userId = (<any>req).user.userid._id;
+
+    if (userId == null || userId == undefined) {
+        logError('unable to get userID');
+        res.status(404).send('Improper request');
+        return false;
+    }
+    try {
+        const userAllowed = await checkUserAllowedFor(userId, 'assignRole');
+        if (!userAllowed) {
+            res.status(401).send(
+                'User not authorised to perform this operation'
+            );
+            return false;
+        }
+        const role = req.body.role;
+        const assignedRole = await assignRoleToUser(userId, role);
+        if (Object.keys(assignedRole).length == 0) {
+            res.status(200).send('Role exists already');
+            return false;
+        }
+        res.status(200).json(assignedRole);
         return true;
     } catch (e) {
         logError('Could not find user who sent the request. Error: ' + e);
