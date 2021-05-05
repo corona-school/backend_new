@@ -1,17 +1,24 @@
-import { validUser } from '../../../userConfiguration';
-import chai from 'chai';
-import { server } from '../../../../server';
 import {
     addUser,
     deleteTestRoles,
-    deleteUser, findTask,
+    deleteUser,
+    findRole,
+    getUserRole,
     setupTestRoles,
     setupTestTasks,
-    setupTestUserAdminRole, setupTestUserPupilRole,
+    setupTestUserAdminRole,
+    setupTestUserPupilRole,
     tearDownTestTasks,
 } from '../../../../services/dataStore';
 
-describe('Try to create tasks', async function () {
+process.env.NODE_ENV = 'test';
+import chai from 'chai';
+import chaiHttp from 'chai-http';
+chai.use(chaiHttp);
+import { server } from '../../../../server';
+import { invalidUserPhone, validUser } from '../../../userConfiguration';
+
+describe('Try to delete roles for user', async function () {
     before(async function () {
         const user = await addUser(validUser);
         await setupTestRoles();
@@ -23,7 +30,7 @@ describe('Try to create tasks', async function () {
         await deleteTestRoles();
         await tearDownTestTasks();
     });
-    it('Create a task with login credentials that allow task creation', function (done) {
+    it('Assigns a role with login credentials that allow role deletion', function (done) {
         const loginDetail = {
             email: validUser.email,
             password: validUser.password,
@@ -35,20 +42,25 @@ describe('Try to create tasks', async function () {
             .end(async (error, response) => {
                 const accessToken = response.body.response.accessToken;
                 chai.request(server)
-                    .post('/tasks/new')
+                    .post('/roles/delete')
                     .set('Authorization', 'Bearer ' + accessToken)
                     .type('json')
-                    .send({ name: 'unitTest', minLevelRequired: 1 })
+                    .send({ role: 'unitTestAdmin' })
                     .end(async (error, response) => {
                         try {
-                            chai.assert.hasAllKeys(response.body, [
-                                'id',
-                                'name',
-                                'minLevelRequired',
-                                'createdOn',
-                            ]);
-                            const role = await findTask('unitTest');
-                            chai.assert.isNotNull(role, 'Task not created?');
+                            chai.assert.hasAllKeys(response.body, ['count']);
+                            chai.assert.equal(
+                                response.body.count,
+                                1,
+                                'Multiple deleted or none!'
+                            );
+                            const userRoles = await getUserRole(
+                                response.body.userId
+                            );
+                            const roleNames = userRoles.map(
+                                (obj) => obj.roleName
+                            );
+                            chai.assert.notInclude(roleNames, 'unitTestAdmin');
                             done();
                         } catch (e) {
                             done(e);
@@ -57,7 +69,8 @@ describe('Try to create tasks', async function () {
             });
     });
 });
-describe('Try to create tasks', async function () {
+
+describe('Try to delete roles', async function () {
     before(async function () {
         const user = await addUser(validUser);
         await setupTestRoles();
@@ -69,7 +82,8 @@ describe('Try to create tasks', async function () {
         await deleteTestRoles();
         await tearDownTestTasks();
     });
-    it('Create a task with login credentials that dont allow task creation', function (done) {
+
+    it('Create a role with login credentials that dont allow role deletion', function (done) {
         const loginDetail = {
             email: validUser.email,
             password: validUser.password,
@@ -81,10 +95,10 @@ describe('Try to create tasks', async function () {
             .end(async (error, response) => {
                 const accessToken = response.body.response.accessToken;
                 chai.request(server)
-                    .post('/tasks/new')
+                    .post('/roles/delete')
                     .set('Authorization', 'Bearer ' + accessToken)
                     .type('json')
-                    .send({ name: 'unitTest', minLevelRequired: 1 })
+                    .send({ role: 'unitTestAdmin' })
                     .end(async (error, response) => {
                         try {
                             chai.assert.equal(response.status, 401);
@@ -92,6 +106,13 @@ describe('Try to create tasks', async function () {
                                 response.text,
                                 'User not authorised to perform this operation'
                             );
+                            const userRoles = await getUserRole(
+                                response.body.userId
+                            );
+                            const roleNames = userRoles.map(
+                                (obj) => obj.roleName
+                            );
+                            chai.assert.notInclude(roleNames, 'unitTestAdmin');
                             done();
                         } catch (e) {
                             done(e);

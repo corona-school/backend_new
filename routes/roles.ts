@@ -1,5 +1,10 @@
 import express from 'express';
-import { assignRole, newRole } from '../controllers/rolesController';
+import {
+    assignRole,
+    changeRoleLevel,
+    deleteRole,
+    newRole
+} from '../controllers/rolesController';
 import passport from 'passport';
 
 export const roles = (app: express.Application): void => {
@@ -14,6 +19,16 @@ export const roles = (app: express.Application): void => {
         '/assign',
         passport.authenticate('jwt', { session: false }),
         assignRole
+    );
+    rolesRoute.post(
+        '/delete',
+        passport.authenticate('jwt', { session: false }),
+        deleteRole
+    );
+    rolesRoute.post(
+        '/changeLevel',
+        passport.authenticate('jwt', { session: false }),
+        changeRoleLevel
     );
     app.use('/roles', rolesRoute);
 };

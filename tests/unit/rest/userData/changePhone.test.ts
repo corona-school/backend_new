@@ -77,7 +77,7 @@ describe('Try changing Phone', function () {
                             const updatedNotificationCount = await getTextNotifications(
                                 invalidUserPhone.phone
                             );
-
+                            console.log(updatedNotificationCount);
                             chai.assert.equal(
                                 updatedNotificationCount.length,
                                 1,

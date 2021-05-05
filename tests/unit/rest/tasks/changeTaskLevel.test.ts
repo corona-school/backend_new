@@ -4,14 +4,16 @@ import { server } from '../../../../server';
 import {
     addUser,
     deleteTestRoles,
-    deleteUser, findTask,
+    deleteUser,
+    findTask,
     setupTestRoles,
     setupTestTasks,
-    setupTestUserAdminRole, setupTestUserPupilRole,
+    setupTestUserAdminRole,
+    setupTestUserPupilRole,
     tearDownTestTasks,
 } from '../../../../services/dataStore';
 
-describe('Try to create tasks', async function () {
+describe('Try to change tasks', async function () {
     before(async function () {
         const user = await addUser(validUser);
         await setupTestRoles();
@@ -23,7 +25,7 @@ describe('Try to create tasks', async function () {
         await deleteTestRoles();
         await tearDownTestTasks();
     });
-    it('Create a task with login credentials that allow task creation', function (done) {
+    it('Change a task with login credentials that allow', function (done) {
         const loginDetail = {
             email: validUser.email,
             password: validUser.password,
@@ -35,10 +37,10 @@ describe('Try to create tasks', async function () {
             .end(async (error, response) => {
                 const accessToken = response.body.response.accessToken;
                 chai.request(server)
-                    .post('/tasks/new')
+                    .post('/tasks/changeLevel')
                     .set('Authorization', 'Bearer ' + accessToken)
                     .type('json')
-                    .send({ name: 'unitTest', minLevelRequired: 1 })
+                    .send({ name: 'createRole', level: 4 })
                     .end(async (error, response) => {
                         try {
                             chai.assert.hasAllKeys(response.body, [
@@ -47,8 +49,15 @@ describe('Try to create tasks', async function () {
                                 'minLevelRequired',
                                 'createdOn',
                             ]);
-                            const role = await findTask('unitTest');
-                            chai.assert.isNotNull(role, 'Task not created?');
+                            const role = await findTask('createRole');
+                            chai.assert.isNotNull(role, 'Task deleted?');
+                            if (role !== null) {
+                                chai.assert.equal(
+                                    role.minLevelRequired,
+                                    4,
+                                    'Task not updated?'
+                                );
+                            }
                             done();
                         } catch (e) {
                             done(e);
@@ -57,7 +66,7 @@ describe('Try to create tasks', async function () {
             });
     });
 });
-describe('Try to create tasks', async function () {
+describe('Try to change tasks', async function () {
     before(async function () {
         const user = await addUser(validUser);
         await setupTestRoles();
@@ -84,7 +93,7 @@ describe('Try to create tasks', async function () {
                     .post('/tasks/new')
                     .set('Authorization', 'Bearer ' + accessToken)
                     .type('json')
-                    .send({ name: 'unitTest', minLevelRequired: 1 })
+                    .send({ name: 'createRole', minLevelRequired: 4 })
                     .end(async (error, response) => {
                         try {
                             chai.assert.equal(response.status, 401);
@@ -92,6 +101,15 @@ describe('Try to create tasks', async function () {
                                 response.text,
                                 'User not authorised to perform this operation'
                             );
+                            const role = await findTask('createRole');
+                            chai.assert.isNotNull(role, 'Task deleted?');
+                            if (role !== null) {
+                                chai.assert.equal(
+                                    role.minLevelRequired,
+                                    1,
+                                    'Task updated?'
+                                );
+                            }
                             done();
                         } catch (e) {
                             done(e);
