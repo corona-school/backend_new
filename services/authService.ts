@@ -11,7 +11,7 @@ import {
 } from '../utils/helpers';
 import { signAccessToken, signRefreshToken } from '../utils/jwt_signature';
 import { keys } from '../utils/secretKeys';
-import { verification } from '../mailjet/mailTemplates/verification';
+import { verificationEmail } from '../mailjet/mailTemplates/verificationEmail';
 import { resetPasswordNotification } from '../mailjet/mailTemplates/resetPassword';
 import { userRegister } from './userService';
 
@@ -60,14 +60,17 @@ export const registerUser = async ({
         logInfo(`${user.email} has been registered`);
         const emailLink = generateEmailLink(user);
 
-        const verificationEmail = new verification(user.email, {
-            subject: 'Verify your email address',
-            firstname: user.firstName,
-            verification_email: emailLink,
-        });
+        const verificationEmailNotification = new verificationEmail(
+            user.email,
+            {
+                subject: 'Verify your email address',
+                firstname: user.firstName,
+                verification_email: emailLink,
+            }
+        );
 
         try {
-            await verificationEmail.forced_send();
+            await verificationEmailNotification.forced_send();
         } catch (e) {
             logError('Problem sending email. ' + e);
         }

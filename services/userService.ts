@@ -12,7 +12,7 @@ import {
 import { logError, logInfo } from './logger';
 
 import { PrismaClient, User } from '@prisma/client';
-import { verification } from '../mailjet/mailTemplates/verification';
+import { verificationEmail } from '../mailjet/mailTemplates/verificationEmail';
 import { sms } from '../mailjet/smsTemplates/sms';
 const prisma = new PrismaClient();
 
@@ -41,7 +41,7 @@ export const emailChange = async ({ userId, email }: IChangeEmail) => {
             });
 
             const emailLink = generateEmailLink(updateEmail);
-            const updateEmailNotification = new verification(
+            const updateEmailNotification = new verificationEmail(
                 updateEmail.email,
                 {
                     subject: 'Verify your email address',
@@ -86,8 +86,9 @@ export const phoneChange = async ({ userId, phone }: IChangePhone) => {
                 phone,
                 `Hello ${phoneUpdate.firstName}, Verify your phone number by clicking ${link}`
             );
-            await phoneChangeNotification.forced_send();
+            const phoneID = await phoneChangeNotification.forced_send();
 
+            logInfo(phoneID.res);
             logInfo(`Phone change link : ${link}`);
             logInfo(`Phone notification has been sent`);
 
@@ -117,7 +118,10 @@ export const deleteUserData = async ({ userId }: any) => {
     const AuthData = await getUserAuthData(userId);
     let transactionArray = [];
 
-    if (user != null && AuthData != null && user.phone != null) {
+    if (user != null && AuthData != null) {
+        // If the user registers for the first time,
+        // they dont give their phone numbers and then decide to delete the account,
+        // the check on phone number would always fail. The transaction array later has been modified too.
         const deletePupilData = prisma.pupil.deleteMany({
             where: {
                 userId: userId,
@@ -153,19 +157,23 @@ export const deleteUserData = async ({ userId }: any) => {
                 id: userId,
             },
         });
-
-        // we are using above user.phone != null because we don't need phone while registering the user, and if user wants to delete his/her account before completing his data(phone) we need that null otherwise below query expecting a string value over a null value from DB
-        const deleteTextData = prisma.textNotifications.deleteMany({
-            where: {
-                recipientPhone: user.phone,
-            },
-        });
+        // we are using above user.phone != null because we don't need phone while registering the user,
+        // and if user wants to delete his/her account before completing his data(phone)
+        // we need that null otherwise below query expecting a string value over a null value from DB
+        let deleteTextData = undefined;
+        if (user.phone !== null) {
+            deleteTextData = prisma.textNotifications.deleteMany({
+                where: {
+                    recipientPhone: user.phone,
+                },
+            });
+        }
 
         transactionArray = [
             deletePupilData,
             deleteVolunteerData,
             deleteEmailData,
-            deleteTextData,
+            ...(deleteTextData !== undefined ? [deleteTextData] : []),
             deleteRefreshTokens,
             deleteAuthData,
             deleteUser,
@@ -233,13 +241,17 @@ export const userUpdate = async (userData: IUserData, userId: string) => {
                 });
 
                 const emailLink = generateEmailLink(userUpdate);
-                const verificationEmail = new verification(userData.email, {
-                    subject: 'Verify your email address',
-                    firstname: userUpdate.firstName,
-                    verification_email: emailLink,
-                });
 
-                await verificationEmail.forced_send();
+                const verificationEmailNotification = new verificationEmail(
+                    userData['email'],
+                    {
+                        subject: 'Verify your email address',
+                        firstname: userUpdate.firstName,
+                        verification_email: emailLink,
+                    }
+                );
+
+                await verificationEmailNotification.forced_send();
             }
         }
 

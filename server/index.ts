@@ -1,5 +1,5 @@
 import { ConfigureApollo } from '../apollo';
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction, response } from 'express';
 import cors from 'cors';
 import { ConfigureREST } from '../rest';
 import { ConfigureLogger } from '../services/logger';
@@ -11,6 +11,7 @@ import { authentication } from '../routes/authRoute';
 import { token } from '../routes/tokenRefreshRoute';
 import { userdata } from '../routes/userDataRoute';
 import { verification } from '../routes/verificationRoute';
+import { verificationEmail } from '../mailjet/mailTemplates/verificationEmail';
 
 const app = express();
 
