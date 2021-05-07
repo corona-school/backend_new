@@ -1,8 +1,27 @@
+process.env.NODE_ENV = 'test';
 import { assert } from 'chai';
 import { test_notification } from '../../../mailjet/mailTemplates/test_notification';
-import { getPendingEmailNotificationIds } from '../../../services/dataStore';
+import {
+    addUser,
+    deleteUser,
+    getPendingEmailNotificationIds,
+} from '../../../services/dataStore';
 
-describe('Test deferring email notifications', function () {
+describe('Test email notifications', function () {
+    before(async function () {
+        const user = {
+            firstName: 'test',
+            lastName: 'user',
+            email: 'ayush.pandey@corona-school.de',
+            notificationLevel: 'all' as const,
+            phone: '+49017674853265',
+            password: 'password',
+        };
+        await addUser(user);
+    });
+    after(async function () {
+        await deleteUser('ayush.pandey@corona-school.de');
+    });
     it('Sends a deferred notification for template ID: 2672994', async function () {
         const notification = new test_notification(
             'ayush.pandey@corona-school.de',
@@ -25,9 +44,7 @@ describe('Test deferring email notifications', function () {
             );
         });
     });
-});
 
-describe('Test sending a forced email notification', function () {
     it('Sends a forced notification for template ID: 2672994', async function () {
         const notification = new test_notification(
             'ayush.pandey@corona-school.de',

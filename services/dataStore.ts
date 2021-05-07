@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { logError } from './logger';
+import bcrypt from 'bcrypt';
+import { token } from '../routes/tokenRefreshRoute';
 
 class dataStore {
     static prisma = new PrismaClient();
@@ -19,8 +21,32 @@ export async function addUser(details: {
     email: string;
     notificationLevel: 'all' | 'necessary';
     phone: string;
+    password: string;
 }) {
-    return dataStore.prisma.user.create({ data: details });
+    const user = await dataStore.prisma.user.create({
+        data: {
+            firstName: details.firstName,
+            lastName: details.lastName,
+            email: details.email,
+            phone: details.phone,
+        },
+    });
+
+    const saltRounds = 10;
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hash = await bcrypt.hash(details.password, salt);
+
+    const authdata = await dataStore.prisma.authenticationData.create({
+        data: {
+            password: hash,
+            user: {
+                connect: {
+                    id: user.id,
+                },
+            },
+        },
+    });
+    return user;
 }
 
 export async function getUserCount() {
@@ -34,6 +60,22 @@ export async function getPendingEmailNotifications() {
         },
     });
 }
+export async function getEmailNotifications(receiver: string) {
+    return dataStore.prisma.emailNotifications.findMany({
+        where: {
+            recipientEmail: receiver,
+        },
+    });
+}
+
+export async function getTextNotifications(receiver: string) {
+    return dataStore.prisma.textNotifications.findMany({
+        where: {
+            recipientPhone: receiver,
+        },
+    });
+}
+
 export async function getPendingEmailNotificationIds() {
     return dataStore.prisma.emailNotifications.findMany({
         where: {
@@ -56,7 +98,8 @@ export async function getPendingTextNotifications() {
 export async function addTextNotification(
     sender: string,
     recipient: string,
-    message: string
+    message: string,
+    status?: 'pending' | 'sent' | undefined
 ) {
     try {
         const user = await dataStore.prisma.user.findUnique({
@@ -70,6 +113,7 @@ export async function addTextNotification(
                 sender: sender,
                 recipientPhone: recipient,
                 text: message,
+                status: status === undefined ? 'pending' : status,
             },
         });
 
@@ -167,6 +211,16 @@ export async function markTextNotification(
 //Please refrain from using this in general use for deleting users.
 export async function deleteUser(email: string) {
     const user = await findUser(email);
+    const authData = await dataStore.prisma.authenticationData.findMany({
+        where: {
+            userId: user[0].id,
+        },
+    });
+    await dataStore.prisma.refreshToken.deleteMany({
+        where: {
+            authId: authData[0].id,
+        },
+    });
     await dataStore.prisma.authenticationData.deleteMany({
         where: {
             userId: user[0].id,
@@ -177,6 +231,13 @@ export async function deleteUser(email: string) {
             recipientEmail: email,
         },
     });
+    if (user[0].phone !== null) {
+        await dataStore.prisma.textNotifications.deleteMany({
+            where: {
+                recipientPhone: user[0].phone,
+            },
+        });
+    }
     await dataStore.prisma.user.delete({
         where: {
             email: email,
@@ -184,4 +245,28 @@ export async function deleteUser(email: string) {
     });
 
     return true;
+}
+
+export async function getRefreshTokenFromAuthId(authId: string) {
+    const tokens = await dataStore.prisma.refreshToken.findFirst({
+        where: {
+            authId: authId,
+        },
+    });
+    return tokens === null ? { token: undefined } : tokens;
+}
+
+export async function disconnectPrisma() {
+    await dataStore.prisma.$disconnect();
+}
+
+export async function getRefreshTokenObject(refreshToken: string) {
+    const tokenObject = await dataStore.prisma.refreshToken.findMany({
+        where: {
+            token: refreshToken,
+            valid: true,
+        },
+    });
+
+    return tokenObject.length === 0 ? [] : tokenObject;
 }

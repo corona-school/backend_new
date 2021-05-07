@@ -13,5 +13,5 @@ export const verification = (app: express.Application): void => {
     verifyApi.post('/phone/:userId/:token', verifyPhone);
     verifyApi.post('/password/:userId/:token', verifyResetPassword);
 
-    app.use('/verification', verifyApi);
+    app.use('/verificationEmail', verifyApi);
 };
