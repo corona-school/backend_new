@@ -200,12 +200,11 @@ export const userUpdate = async (userData: IUserData, userId: string) => {
     const findUser: User | null = await findUserById(userId);
 
     if (userData.userType != undefined) {
-        const type = userData.userType;
-        if (type == 'volunteer') {
+        if (userData.userType == 'volunteer') {
             await userToVolunteer(userId);
         }
 
-        if (type == 'pupil') {
+        if (userData.userType == 'pupil') {
             await userToPupil(userId);
         }
 

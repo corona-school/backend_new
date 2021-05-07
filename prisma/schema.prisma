@@ -55,7 +55,7 @@ model Offer {
   category              String
   tags                  String[]
   target_group          String
-  time                  DateTime
+  times                 String[]
   VolunteerMatchRequest VolunteerMatchRequest[]
 }
 
@@ -69,6 +69,7 @@ model AuthenticationData {
 
 model PupilMatchRequest {
   id             String           @id @default(cuid())
+  createdAt      DateTime         @default(now())
   user           Pupil            @relation(fields: [requestor], references: [id])
   requestor      String
   parameters     String[]
@@ -85,6 +86,7 @@ model RefreshToken {
 
 model VolunteerMatchRequest {
   id             String           @id @default(cuid())
+  createdAt      DateTime         @default(now())
   user           Volunteer        @relation(fields: [requestor], references: [id])
   requestor      String
   parameters     String[]
@@ -99,6 +101,7 @@ model RequestMatches {
   volunteerReq   VolunteerMatchRequest @relation(fields: [volunteerReqId], references: [id])
   pupilReqId     String
   volunteerReqId String
+  @@unique([pupilReqId, volunteerReqId])
 }
 
 model EmailNotifications {

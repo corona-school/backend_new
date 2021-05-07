@@ -154,7 +154,7 @@ export const isPhoneVerified = (phone: string) => {
     });
 };
 
-export const isVolunteer = (userId: string) => {
+export const getVolunteer = (userId: string) => {
     return prisma.volunteer.findFirst({
         where: {
             userId,
@@ -174,7 +174,7 @@ export const userToVolunteer = (userId: string) => {
     });
 };
 
-export const isPupil = (userId: string) => {
+export const getPupil = (userId: string) => {
     return prisma.pupil.findFirst({
         where: {
             userId,

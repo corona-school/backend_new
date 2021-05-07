@@ -1,49 +1,65 @@
-import { Offer, PrismaClient } from '@prisma/client';
-import { isPupil } from '../utils/helpers';
-import { logError } from './logger';
+import { Pupil } from '@prisma/client';
+import { getPupil } from '../utils/helpers';
+import prisma from '../utils/prismaClient';
+import { logError, logInfo } from './logger';
 
-const prisma = new PrismaClient();
+interface IOffers {
+    matchOfferId: string;
+    priority: number;
+}
 
 export const createPupilMatchRequest = async (
-    offerId: string,
+    offers: [IOffers],
     userId: string
 ) => {
-    const pupil = await isPupil(userId);
+    logInfo('Verifying if user is a pupil');
+    const pupil: Pupil | null = await getPupil(userId);
+
     if (pupil == null) {
         logError('User must be a pupil');
         throw new Error('User must be a pupil to create a match request');
     }
 
-    const courseData: Offer | null = await prisma.offer.findUnique({
-        where: {
-            id: offerId,
-        },
-    });
-
-    if (courseData) {
-        const createReqest = await prisma.pupilMatchRequest.create({
-            data: {
-                parameters: ['1', '12'],
-                user: {
-                    connect: {
-                        id: pupil.id,
-                    },
-                },
+    let courseOffers: any = [];
+    for (let data of offers) {
+        const findCourse = await prisma.volunteerMatchRequest.findUnique({
+            where: {
+                id: data.matchOfferId,
             },
         });
 
-        return {
-            data: createReqest,
-            message: 'Match request created',
-        };
+        if (findCourse) {
+            courseOffers.push({
+                courseId: findCourse.offerId,
+                priority: data.priority,
+            });
+        }
     }
+
+    const createPupilRequest = await prisma.pupilMatchRequest.create({
+        data: {
+            parameters: [`priorities: ${JSON.stringify(courseOffers)}`],
+            user: {
+                connect: {
+                    id: pupil.id,
+                },
+            },
+        },
+    });
+
+    return {
+        data: createPupilRequest,
+        message: 'Pupil match request created',
+    };
 };
 
-export const removeOfferMatchRequest = async (
+export const deleteOfferMatchRequest = async (
     matchRequestId: string,
     userId: string
 ) => {
-    const pupil = await isPupil(userId);
+    logInfo('Verifying if user is a pupil');
+    const pupil: Pupil | null = await getPupil(userId);
+
     if (pupil == null) {
         logError('User must be a pupil');
         throw new Error('User must be a pupil to create a match request');
@@ -57,6 +73,6 @@ export const removeOfferMatchRequest = async (
 
     return {
         data: removeMatchRequest,
-        message: 'Match request removed',
+        message: 'Pupil match request deleted',
     };
 };

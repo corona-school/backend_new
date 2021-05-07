@@ -7,6 +7,10 @@ import {
     deleteUserData,
     userUpdate,
 } from '../../services/userService';
+import { createPupilMatchRequest } from '../../services/pupilMatchRequest';
+import { createCourse, deleteCourse } from '../../services/courseService';
+import { createOfferMatchRequest } from '../../services/offerMatchRequest';
+import { matchRequest } from '../../services/matchRequest';
 
 export const changeEmail = async (
     req: Request,
@@ -123,6 +127,125 @@ export const updateUserData = async (
         const update_user = await userUpdate(userData, userId);
         res.json({
             response: update_user,
+        });
+    } catch (error) {
+        next(new Error(error.message));
+    }
+};
+
+/* ======================================================================== */
+
+export const courseCreate_ = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const userId = (<any>req).user.userid._id;
+        const courseData = req.body;
+
+        if (userId == null || userId == undefined) {
+            logError('Unable to get userID');
+            next(new Error('Unable to get userID'));
+        }
+
+        console.log('======');
+
+        const test = await createCourse(courseData, userId);
+        res.json({
+            response: test,
+        });
+    } catch (error) {
+        next(new Error(error.message));
+    }
+};
+
+export const courseDeactivate = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const userId = (<any>req).user.userid._id;
+        const { offerId } = req.body;
+
+        if (userId == null || userId == undefined) {
+            logError('Unable to get userID');
+            next(new Error('Unable to get userID'));
+        }
+
+        const test = await deleteCourse(offerId, userId);
+        res.json({
+            response: test,
+        });
+    } catch (error) {
+        next(new Error(error.message));
+    }
+};
+
+export const createOffer = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const userId = (<any>req).user.userid._id;
+        const { offerId, matchReq } = req.body;
+
+        if (userId == null || userId == undefined) {
+            logError('Unable to get userID');
+            next(new Error('Unable to get userID'));
+        }
+
+        const test = await createOfferMatchRequest(offerId, matchReq, userId);
+        res.json({
+            response: test,
+        });
+    } catch (error) {
+        next(new Error(error.message));
+    }
+};
+
+export const pupil = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const userId = (<any>req).user.userid._id;
+        const { offers } = req.body;
+
+        if (userId == null || userId == undefined) {
+            logError('Unable to get userID');
+            next(new Error('Unable to get userID'));
+        }
+
+        const match = await createPupilMatchRequest(offers, userId);
+        res.json({
+            response: match,
+        });
+    } catch (error) {
+        next(new Error(error.message));
+    }
+};
+
+export const match_ = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const userId = (<any>req).user.userid._id;
+        const { pupilID, volunteerID } = req.body;
+
+        if (userId == null || userId == undefined) {
+            logError('Unable to get userID');
+            next(new Error('Unable to get userID'));
+        }
+
+        const match = await matchRequest(pupilID, volunteerID);
+        res.json({
+            response: match,
         });
     } catch (error) {
         next(new Error(error.message));

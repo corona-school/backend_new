@@ -1,21 +1,19 @@
-import { PrismaClient } from '@prisma/client';
-import { isVolunteer } from '../utils/helpers';
+import { Offer, Volunteer } from '@prisma/client';
+import { getVolunteer } from '../utils/helpers';
+import prisma from '../utils/prismaClient';
 import { logError, logInfo } from './logger';
-
-const prisma = new PrismaClient();
-
 interface ICourse {
     title: string;
     category: string;
     tags: string[];
     target_group: string;
-    time: Date;
+    times: string[];
     description: string;
 }
 
 export const createCourse = async (courseData: ICourse, userId: string) => {
-    logInfo('Verifying if user is Volunteer');
-    const volunteer = await isVolunteer(userId);
+    logInfo('Verifying if user is a volunteer');
+    const volunteer: Volunteer | null = await getVolunteer(userId);
 
     if (volunteer == null) {
         logError('User must be a volunteer');
@@ -28,7 +26,7 @@ export const createCourse = async (courseData: ICourse, userId: string) => {
             category: courseData.category,
             tags: courseData.tags,
             target_group: courseData.target_group,
-            time: courseData.time,
+            times: courseData.times,
             description: courseData.description,
             volunteer: {
                 connect: {
@@ -40,13 +38,13 @@ export const createCourse = async (courseData: ICourse, userId: string) => {
 
     return {
         data: createCourse,
-        message: 'Course has been created',
+        message: 'Course offer created',
     };
 };
 
-export const deactivateCourse = async (offerId: string, userId: string) => {
-    logInfo('Verifying if user is Volunteer');
-    const volunteer = await isVolunteer(userId);
+export const deleteCourse = async (offerId: string, userId: string) => {
+    logInfo('Verifying if user is a volunteer');
+    const volunteer: Volunteer | null = await getVolunteer(userId);
 
     if (volunteer == null) {
         logError('User must be a volunteer');
@@ -72,24 +70,18 @@ export const deactivateCourse = async (offerId: string, userId: string) => {
 
     return {
         data: deleteCourse,
-        message: 'Course has been deleted',
+        message: 'Course offer deleted',
     };
 };
 
 export const getCourseData = async (offerId: string) => {
     logInfo(`Getting course data with offerID : ${offerId}`);
 
-    const courseData = await prisma.offer.findUnique({
+    const courseData: Offer | null = await prisma.offer.findUnique({
         where: {
             id: offerId,
         },
     });
 
-    if (courseData) {
-        return courseData;
-    } else {
-        return {
-            message: 'No course found',
-        };
-    }
+    return courseData;
 };

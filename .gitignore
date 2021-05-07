@@ -7,3 +7,4 @@ keys.ts
 .vscode
 *.log
 **/logs
+/build
