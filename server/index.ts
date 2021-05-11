@@ -28,7 +28,7 @@ token(app);
 userdata(app);
 verification(app);
 roles(app);
-tasks(app)
+tasks(app);
 
 app.use((req, res, next) => {
     const err = new Error('Not found');
