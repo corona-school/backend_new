@@ -7,11 +7,12 @@ import { startNotificationHandler } from '../services/notificationHandler';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import '../middlewares/auth';
-import { authentication } from '../routes/authRoute';
-import { token } from '../routes/tokenRefreshRoute';
-import { userdata } from '../routes/userDataRoute';
-import { verification } from '../routes/verificationRoute';
-import { verificationEmail } from '../mailjet/mailTemplates/verificationEmail';
+import { authentication } from '../routes/auth';
+import { token } from '../routes/tokenRefresh';
+import { userdata } from '../routes/userData';
+import { verification } from '../routes/verification';
+import {roles} from "../routes/roles";
+import {tasks} from "../routes/tasks";
 
 const app = express();
 
@@ -26,6 +27,8 @@ authentication(app);
 token(app);
 userdata(app);
 verification(app);
+roles(app);
+tasks(app);
 
 app.use((req, res, next) => {
     const err = new Error('Not found');

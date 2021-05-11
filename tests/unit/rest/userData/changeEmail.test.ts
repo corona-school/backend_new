@@ -67,11 +67,11 @@ describe('Try changing Email', function () {
                                 'Email has been updated',
                                 'Improper message returned'
                             );
-                            const updatedUser = await findUser(
-                                invalidUserEmail.email
-                            );
-                            chai.assert.lengthOf(
-                                updatedUser,
+                            const updatedUsers = await findUser({
+                                email: invalidUserEmail.email,
+                            });
+                            chai.assert.equal(
+                                updatedUsers.count,
                                 1,
                                 'Could not find Updated User. Possible update propagation issue'
                             );

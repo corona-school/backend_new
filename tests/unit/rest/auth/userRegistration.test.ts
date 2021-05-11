@@ -115,14 +115,14 @@ describe('Try creating user', function () {
                         'Database was updated, User count doesnt match'
                     );
 
-                    const fetchedUser = await findUser(userEmail);
-                    chai.assert.lengthOf(
-                        fetchedUser,
+                    const fetchedUsers = await findUser({ email: userEmail });
+                    chai.assert.equal(
+                        fetchedUsers.count,
                         1,
                         'More than one users created'
                     );
                     chai.assert.equal(
-                        fetchedUser[0].id,
+                        fetchedUsers.users[0].id,
                         userId,
                         'User ID returned while creating does not match the one fetched. Records do not match'
                     );

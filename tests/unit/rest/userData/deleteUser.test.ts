@@ -54,8 +54,14 @@ describe('Try deleting user', function () {
                             chai.assert.isNotNull(
                                 response.body.response.message
                             );
-                            const user = await findUser(validUser.email);
-                            chai.assert.lengthOf(user, 0, 'User still exists?');
+                            const user = await findUser({
+                                email: validUser.email,
+                            });
+                            chai.assert.equal(
+                                user.count,
+                                0,
+                                'User still exists?'
+                            );
                             done();
                         } catch (e) {
                             //This deletion is written to cleanup the add user in case the test fails to delete the user.

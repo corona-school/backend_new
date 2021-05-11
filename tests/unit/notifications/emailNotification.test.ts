@@ -7,7 +7,7 @@ import {
     getPendingEmailNotificationIds,
 } from '../../../services/dataStore';
 
-describe('Test email notifications', function () {
+describe.skip('Test email notifications', function () {
     before(async function () {
         const user = {
             firstName: 'test',
