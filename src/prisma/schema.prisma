@@ -30,30 +30,55 @@ model User {
 }
 
 model Pupil {
-  id                String              @id @default(cuid())
-  user              User                @relation(fields: [userId], references: [id])
-  userId            String
-  PupilMatchRequest PupilMatchRequest[]
-  TuteeMatchRequests  TuteeMatchRequest[]
+  id                             String              @id @default(cuid())
+  user                           User                @relation(fields: [userId], references: [id])
+  userId                         String
+  grade                          String
+  PupilMatchRequest              CourseParticipantMatchRequest[]
+  TuteeMatchRequests             TuteeMatchRequest[]
+  PropjectCoacheeMatchRequests   ProjectCoacheeMatchRequest[]
 }
 
 model Volunteer {
-  id                    String                  @id @default(cuid())
-  user                  User                    @relation(fields: [userId], references: [id])
-  userId                String
-  offers                Offer[]
-  VolunteerMatchRequest VolunteerMatchRequest[]
-  TutoringOffers        TutoringOffer[]
+  id                          String                  @id @default(cuid())
+  createdAt                   DateTime                @default(now())
+  updatedAt                   DateTime                @default(now())
+  user                        User                    @relation(fields: [userId], references: [id])
+  userId                      String
+  isUniversityStudent         Boolean?
+  state                       String?
+  university                  String?
+  internshipData              InternshipData?
+  courseOffers                VolunteersOnCourses[]
+  tutoringOffers              TutoringOffer[]
+  projectCoachingOffers       ProjectCoachingOffer[]
+  projectCoachingExpertData   ProjectCoachingExpert?
 }
 
-model Offer {
-  id                    String                  @id @default(cuid())
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @default(now())
-  volunteer             Volunteer               @relation(fields: [volunteerId], references: [id])
-  volunteerId           String
-  description           String
-  VolunteerMatchRequest VolunteerMatchRequest[]
+model CourseOffer {
+  id                      String                  @id @default(cuid())
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @default(now())
+  volunteers              VolunteersOnCourses[]
+  title                   String
+  description             String
+  category                String
+  tags                    String[]
+  imageKey                String?
+  times                   String
+  participantContactEmail String?
+  targetGroup             String
+  instructorMatchRequests CourseInstructorMatchRequest[]
+}
+
+model VolunteersOnCourses {
+  createdAt       DateTime    @default(now())
+  volunteer       Volunteer   @relation(fields: [volunteerId], references: [id])
+  volunteerId     String
+  courseOffer     CourseOffer @relation(fields: [courseOfferId], references: [id])
+  courseOfferId   String
+
+  @@id([volunteerId, courseOfferId])
 }
 
 model TutoringOffer {
@@ -62,8 +87,23 @@ model TutoringOffer {
   updatedAt             DateTime                @default(now())
   volunteer             Volunteer               @relation(fields: [volunteerId], references: [id])
   volunteerId           String
-  parameters            String
-  tutorMatchRequests     TutorMatchRequest[]
+  languages             String[]
+  supportsInDaz         Boolean?
+  subjects              String
+  tutorMatchRequests    TutorMatchRequest[]
+}
+
+model ProjectCoachingOffer {
+  id                              String      @id @default(cuid())
+  createdAt                       DateTime    @default(now())
+  updatedAt                       DateTime    @default(now())
+  volunteer                       Volunteer   @relation(fields: [volunteerId], references: [id])
+  volunteerId                     String
+  wasJufoParticipant              Boolean?
+  hasJufoCertificate              Boolean?
+  jufoPastParticipationInfo       String?
+  jufoPastParticipationConfirmed  Boolean?
+  projectCoachMatchRequests       ProjectCoachMatchRequest[]
 }
 
 model AuthenticationData {
@@ -74,12 +114,15 @@ model AuthenticationData {
   refreshToken RefreshToken[]
 }
 
-model PupilMatchRequest {
+model CourseParticipantMatchRequest {
   id             String           @id @default(cuid())
-  user           Pupil            @relation(fields: [requestor], references: [id])
-  requestor      String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @default(now())
+  validUnitil    DateTime?
+  pupil          Pupil            @relation(fields: [pupilId], references: [id])
+  pupilId        String
   parameters     String[]
-  RequestMatches RequestMatches[]
+  match          CourseMatch?
 }
 
 model RefreshToken {
@@ -90,14 +133,14 @@ model RefreshToken {
   authId             String
 }
 
-model VolunteerMatchRequest {
+model CourseInstructorMatchRequest {
   id             String           @id @default(cuid())
-  user           Volunteer        @relation(fields: [requestor], references: [id])
-  requestor      String
-  parameters     String[]
-  offer          Offer            @relation(fields: [offerId], references: [id])
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @default(now())
+  validUnitil    DateTime?
+  offer          CourseOffer      @relation(fields: [offerId], references: [id])
   offerId        String
-  RequestMatches RequestMatches[]
+  match          CourseMatch?
 }
 
 model TutorMatchRequest {
@@ -125,18 +168,67 @@ model TutoringMatch {
   id                    String              @id @default(cuid())
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @default(now())
+  active                Boolean
   tutorMatchRequest     TutorMatchRequest   @relation(fields: [tutorMatchRequestId], references: [id])
   tutorMatchRequestId   String
   tuteeMatchRequest     TuteeMatchRequest   @relation(fields: [tuteeMatchRequestId], references: [id])
   tuteeMatchRequestId   String
 }
 
-model RequestMatches {
-  id             String                @id @default(cuid())
-  pupilReq       PupilMatchRequest     @relation(fields: [pupilReqId], references: [id])
-  volunteerReq   VolunteerMatchRequest @relation(fields: [volunteerReqId], references: [id])
-  pupilReqId     String
-  volunteerReqId String
+model ProjectCoachMatchRequest {
+  id            String                @id @default(cuid())
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @default(now())
+  validUntil    DateTime?
+  offer         ProjectCoachingOffer   @relation(fields: [offerId], references: [id])
+  offerId       String
+  match         ProjectCoachingMatch?
+}
+
+model ProjectCoacheeMatchRequest {
+  id            String          @id @default(cuid())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @default(now())
+  tutee         Pupil           @relation(fields: [pupilId], references: [id])
+  pupilId       String
+  validUntil    DateTime?
+  parameters    String
+  match         ProjectCoachingMatch?
+}
+
+model ProjectCoachingMatch {
+  id                          String                            @id @default(cuid())
+  createdAt                   DateTime                          @default(now())
+  updatedAt                   DateTime                          @default(now())
+  active                      Boolean
+  coachMatchRequest           ProjectCoachMatchRequest          @relation(fields: [coachMatchRequestId], references: [id])
+  coachMatchRequestId         String
+  coacheeMatchRequest         ProjectCoacheeMatchRequest        @relation(fields: [coacheeMatchRequestId], references: [id])
+  coacheeMatchRequestId       String
+}
+
+model CourseMatch {
+  id                          String                            @id @default(cuid())
+  createdAt                   DateTime                          @default(now())
+  updatedAt                   DateTime                          @default(now())
+  active                      Boolean
+  participantMatchRequest     CourseParticipantMatchRequest     @relation(fields: [participantMatchRequestId], references: [id])
+  instructorMatchRequest      CourseInstructorMatchRequest      @relation(fields: [instructorMatchRequestId], references: [id])
+  participantMatchRequestId   String
+  instructorMatchRequestId    String
+}
+
+model ProjectCoachingExpert {
+  id            String      @id @default(cuid())
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now())
+  volunteer     Volunteer   @relation(fields: [volunteerId], references: [id])
+  volunteerId   String
+  contactEmail  String
+  description   String
+  tags          String[]
+  active        Boolean
+  published     Boolean
 }
 
 model EmailNotifications {
@@ -163,6 +255,16 @@ model TextNotifications {
   updatedAt      DateTime           @updatedAt
 }
 
+model InternshipData {
+  id            String              @id @default(cuid())
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @default(now())
+  volunteer     Volunteer           @relation(fields: [volunteerId], references: [id])
+  volunteerId   String
+  module        InternshipModule
+  moduleHours   Int
+}
+
 enum NotificationLevel {
   necessary
   all
@@ -177,4 +279,9 @@ enum NotificationStatus {
 enum NotificationPriority {
   high
   low
+}
+
+enum InternshipModule {
+  Praktikum
+  Seminar
 }
