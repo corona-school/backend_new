@@ -55,7 +55,7 @@ model Offer {
   category              String
   tags                  String[]
   target_group          String
-  times                 String[]
+  times                 String
   VolunteerMatchRequest VolunteerMatchRequest[]
 }
 
@@ -72,7 +72,7 @@ model PupilMatchRequest {
   createdAt      DateTime         @default(now())
   user           Pupil            @relation(fields: [requestor], references: [id])
   requestor      String
-  parameters     String[]
+  parameters     String
   RequestMatches RequestMatches[]
 }
 
@@ -89,7 +89,7 @@ model VolunteerMatchRequest {
   createdAt      DateTime         @default(now())
   user           Volunteer        @relation(fields: [requestor], references: [id])
   requestor      String
-  parameters     String[]
+  parameters     String
   offer          Offer            @relation(fields: [offerId], references: [id])
   offerId        String
   RequestMatches RequestMatches[]

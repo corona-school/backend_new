@@ -1629,6 +1629,13 @@
     "ansicolors" "~0.3.2"
     "redeyed" "~2.1.0"
 
+"chai-as-promised@^7.1.1":
+  "integrity" "sha512-azL6xMoi+uxu6z4rhWQ1jbdUhOMhis2PvscD/xjLqNMkv3BPPp2JyyuTHOrf9BOosGpNQ11v6BKv/g57RXbiaA=="
+  "resolved" "https://registry.npmjs.org/chai-as-promised/-/chai-as-promised-7.1.1.tgz"
+  "version" "7.1.1"
+  dependencies:
+    "check-error" "^1.0.2"
+
 "chai-http@^4.3.0":
   "integrity" "sha512-zFTxlN7HLMv+7+SPXZdkd5wUlK+KxH6Q7bIEMiEx0FK3zuuMqL7cwICAQ0V1+yYRozBburYuxN1qZstgHpFZQg=="
   "resolved" "https://registry.npmjs.org/chai-http/-/chai-http-4.3.0.tgz"
@@ -1642,7 +1649,7 @@
     "qs" "^6.5.1"
     "superagent" "^3.7.0"
 
-"chai@^4.3.4":
+"chai@^4.3.4", "chai@>= 2.1.2 < 5":
   "integrity" "sha512-yS5H68VYOCtN1cjfwumDSuzn/9c+yza4f3reKXlE5rUg7SFcCEy90gJvydNgOYtblyf4Zi6jIWRnXOgErta0KA=="
   "resolved" "https://registry.npmjs.org/chai/-/chai-4.3.4.tgz"
   "version" "4.3.4"

@@ -38,7 +38,7 @@ export const createPupilMatchRequest = async (
 
     const createPupilRequest = await prisma.pupilMatchRequest.create({
         data: {
-            parameters: [`priorities: ${JSON.stringify(courseOffers)}`],
+            parameters: JSON.stringify(courseOffers),
             user: {
                 connect: {
                     id: pupil.id,
@@ -53,7 +53,7 @@ export const createPupilMatchRequest = async (
     };
 };
 
-export const deleteOfferMatchRequest = async (
+export const deletePupilMatchRequest = async (
     matchRequestId: string,
     userId: string
 ) => {
@@ -62,17 +62,17 @@ export const deleteOfferMatchRequest = async (
 
     if (pupil == null) {
         logError('User must be a pupil');
-        throw new Error('User must be a pupil to create a match request');
+        throw new Error('User must be a pupil to delete a match request');
     }
 
-    const removeMatchRequest = await prisma.pupilMatchRequest.delete({
+    const deleteMatchRequest = await prisma.pupilMatchRequest.delete({
         where: {
             id: matchRequestId,
         },
     });
 
     return {
-        data: removeMatchRequest,
+        data: deleteMatchRequest,
         message: 'Pupil match request deleted',
     };
 };

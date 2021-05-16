@@ -6,6 +6,7 @@ import {
     courseCreate_,
     courseDeactivate,
     createOffer,
+    getCourse__,
     match_,
     pupil,
     updateUserData,
@@ -42,11 +43,15 @@ export const userdata = (app: express.Application): void => {
         passport.authenticate('jwt', { session: false }),
         courseCreate_
     );
+
+    userDataApi.get('/course/:offerId', getCourse__);
+
     userDataApi.post(
         '/course-deactivate',
         passport.authenticate('jwt', { session: false }),
         courseDeactivate
     );
+
     userDataApi.post(
         '/create-offer',
         passport.authenticate('jwt', { session: false }),

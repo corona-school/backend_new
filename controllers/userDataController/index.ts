@@ -8,9 +8,14 @@ import {
     userUpdate,
 } from '../../services/userService';
 import { createPupilMatchRequest } from '../../services/pupilMatchRequest';
-import { createCourse, deleteCourse } from '../../services/courseService';
-import { createOfferMatchRequest } from '../../services/offerMatchRequest';
+import {
+    createCourse,
+    deleteCourse,
+    getCourseData,
+} from '../../services/courseService';
+// import { createOfferMatchRequest } from '../../services/offerMatchRequest';
 import { matchRequest } from '../../services/matchRequest';
+import { createOfferMatchRequest } from '../../services/offerMatchRequest';
 
 export const changeEmail = async (
     req: Request,
@@ -132,7 +137,8 @@ export const updateUserData = async (
     }
 };
 
-/* ======================================================================== */
+/* ========================  TESTNG SERVICES  ============================= 
+   ======================================================================== */
 
 export const courseCreate_ = async (
     req: Request,
@@ -148,9 +154,23 @@ export const courseCreate_ = async (
             next(new Error('Unable to get userID'));
         }
 
-        console.log('======');
-
         const test = await createCourse(courseData, userId);
+        res.json({
+            response: test,
+        });
+    } catch (error) {
+        next(new Error(error.message));
+    }
+};
+
+export const getCourse__ = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const { offerId } = req.params;
+        const test = await getCourseData(offerId);
         res.json({
             response: test,
         });

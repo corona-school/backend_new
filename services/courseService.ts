@@ -2,12 +2,16 @@ import { Offer, Volunteer } from '@prisma/client';
 import { getVolunteer } from '../utils/helpers';
 import prisma from '../utils/prismaClient';
 import { logError, logInfo } from './logger';
+interface ICourseDates {
+    startTime: Date;
+    endTime: Date;
+}
 interface ICourse {
     title: string;
     category: string;
     tags: string[];
     target_group: string;
-    times: string[];
+    times: ICourseDates[];
     description: string;
 }
 
@@ -26,7 +30,7 @@ export const createCourse = async (courseData: ICourse, userId: string) => {
             category: courseData.category,
             tags: courseData.tags,
             target_group: courseData.target_group,
-            times: courseData.times,
+            times: JSON.stringify(courseData.times),
             description: courseData.description,
             volunteer: {
                 connect: {

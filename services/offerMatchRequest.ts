@@ -1,4 +1,9 @@
-import { Offer, Volunteer } from '@prisma/client';
+import {
+    Offer,
+    Prisma,
+    Volunteer,
+    VolunteerMatchRequest,
+} from '@prisma/client';
 import moment from 'moment';
 import { getVolunteer } from '../utils/helpers';
 import prisma from '../utils/prismaClient';
@@ -30,20 +35,33 @@ export const createOfferMatchRequest = async (
         },
     });
 
-    let MatchReq: any[] = [],
-        validDates: any[] = [];
+    let MatchReq: Prisma.Prisma__VolunteerMatchRequestClient<VolunteerMatchRequest>[] = [],
+        valid: number[] = [],
+        transactionIds: string[] = [];
 
     if (courseData) {
-        courseData.times.forEach((courseTime) => {
-            validDates.push(calculateValidTimestamps(valid_until, courseTime));
-        });
+        const courseTimes = JSON.parse(courseData.times);
+
+        courseTimes.forEach(
+            (courseTime: { startTime: string; endTime: string }) => {
+                valid = [
+                    ...valid,
+                    calculateValidTimestamps(
+                        valid_until,
+                        courseTimes.startTime
+                    ),
+                ];
+            }
+        );
+
+        let params = {
+            valid_until: valid,
+            target_group: courseData.target_group,
+        };
 
         const query = prisma.volunteerMatchRequest.create({
             data: {
-                parameters: [
-                    `valid_until: ${validDates}`,
-                    `target_group: ${courseData.target_group}`,
-                ],
+                parameters: JSON.stringify(params),
                 user: {
                     connect: {
                         id: volunteer.id,
@@ -59,18 +77,23 @@ export const createOfferMatchRequest = async (
 
         // above we are creating multiple queries and then executing in a batch
         for (let i = 0; i < NumberOfMatchReq; i++) {
-            MatchReq.push(query);
+            MatchReq = [...MatchReq, query];
         }
 
-        await prisma.$transaction(MatchReq);
+        const transaction = await prisma.$transaction(MatchReq);
+
+        transaction.forEach((item) => {
+            transactionIds = [...transactionIds, item.id];
+        });
 
         return {
-            message: `Offer match request created`,
+            data: transactionIds,
+            message: `Offer match requests created`,
         };
     } else {
-        logError('No offers for the given ID');
+        logError('No course found');
         return {
-            message: 'No offers found',
+            message: 'No course found',
         };
     }
 };
@@ -84,7 +107,7 @@ export const deleteOfferMatchRequest = async (
 
     if (volunteer == null) {
         logError('User must be a volunteer');
-        throw new Error('User must be a volunteer to create a match request');
+        throw new Error('User must be a volunteer to delete a match request');
     }
 
     const deleteMatch = await prisma.volunteerMatchRequest.delete({

@@ -17,11 +17,12 @@ export async function findUser(email: string) {
 
 export async function addUser(details: {
     firstName: string;
-    lastName: string | null;
+    lastName?: string | null;
     email: string;
-    notificationLevel: 'all' | 'necessary';
-    phone: string;
+    notificationLevel?: 'all' | 'necessary';
+    phone?: string;
     password: string;
+    userType?: string;
 }) {
     const user = await dataStore.prisma.user.create({
         data: {
@@ -209,7 +210,7 @@ export async function markTextNotification(
 
 //This function is only intended to be used for modifying data model during tests.
 //Please refrain from using this in general use for deleting users.
-export async function deleteUser(email: string) {
+export async function deleteUser(email: string, VolunteerId?: string) {
     const user = await findUser(email);
     const authData = await dataStore.prisma.authenticationData.findMany({
         where: {
@@ -229,6 +230,21 @@ export async function deleteUser(email: string) {
     await dataStore.prisma.emailNotifications.deleteMany({
         where: {
             recipientEmail: email,
+        },
+    });
+    await dataStore.prisma.offer.deleteMany({
+        where: {
+            volunteerId: VolunteerId,
+        },
+    });
+    await dataStore.prisma.volunteer.deleteMany({
+        where: {
+            userId: user[0].id,
+        },
+    });
+    await dataStore.prisma.pupil.deleteMany({
+        where: {
+            userId: user[0].id,
         },
     });
     if (user[0].phone !== null) {
