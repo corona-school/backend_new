@@ -19,7 +19,12 @@ app.use(express.json());
 ConfigureLogger();
 ConfigureCORS();
 app.use(hpp());
-app.use(helmet());
+app.use(
+    helmet({
+        contentSecurityPolicy:
+            process.env.NODE_ENV === 'production' ? undefined : false,
+    })
+);
 ConfigureApollo(app);
 ConfigureREST(app);
 authentication(app);
@@ -51,6 +56,7 @@ function ConfigureCORS() {
     if (process.env.NODE_ENV === 'dev') {
         requestOrigins = [
             'http://localhost:3000',
+            'http://localhost:4001',
             'https://web-user-app-live.herokuapp.com',
             'https://web-user-app-dev.herokuapp.com',
             /^https:\/\/cs-web-user-app-(pr-[0-9]+|br-[-a-z0-9]+).herokuapp.com$/,
