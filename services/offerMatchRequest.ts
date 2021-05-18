@@ -9,9 +9,9 @@ import { getVolunteer } from '../utils/helpers';
 import prisma from '../utils/prismaClient';
 import { logError, logInfo } from './logger';
 
-let valid_until: moment.Moment;
+let valid_until_env: moment.Moment;
 if (process.env.valid_until != undefined) {
-    valid_until = moment(process.env.valid_until, 'YYYY-MM-DD hh:mm:ss');
+    valid_until_env = moment(process.env.valid_until, 'YYYY-MM-DD hh:mm:ss');
 } else {
     logError('(Valid_until) environment variable not defined');
 }
@@ -41,21 +41,11 @@ export const createOfferMatchRequest = async (
 
     if (courseData) {
         const courseTimes = JSON.parse(courseData.times);
-
-        courseTimes.forEach(
-            (courseTime: { startTime: string; endTime: string }) => {
-                valid = [
-                    ...valid,
-                    calculateValidTimestamps(
-                        valid_until,
-                        courseTimes.startTime
-                    ),
-                ];
-            }
-        );
-
         let params = {
-            valid_until: valid,
+            valid_until: calculateValidTimestamps(
+                valid_until_env,
+                courseTimes[0]
+            ),
             target_group: courseData.target_group,
         };
 
@@ -124,9 +114,21 @@ export const deleteOfferMatchRequest = async (
 
 const calculateValidTimestamps = (
     valid_until: moment.Moment,
-    courseDate: string
+    courseDate: { startTime: string; endTime: string }
 ): number => {
-    const milliseconds = valid_until.diff(moment(courseDate));
+    const milliseconds = valid_until.diff(moment(courseDate.startTime));
+
+    const days = moment
+        .duration(valid_until.diff(moment(courseDate.startTime)))
+        .days();
+    const hours = moment
+        .duration(valid_until.diff(moment(courseDate.startTime)))
+        .hours();
+    const minutes = moment
+        .duration(valid_until.diff(moment(courseDate.startTime)))
+        .minutes();
+
+    const remainingTime = `${days} days ${hours} hours & ${minutes} minutes`;
 
     return milliseconds;
 };
