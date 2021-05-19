@@ -1,8 +1,4 @@
-import {
-    addUser,
-    deleteUser,
-    getRefreshTokenFromAuthId,
-} from '../../../../services/dataStore';
+import { addUser } from '../../../../dataStore/types/user';
 
 process.env.NODE_ENV = 'test';
 import chai from 'chai';
@@ -10,6 +6,10 @@ import chaiHttp from 'chai-http';
 chai.use(chaiHttp);
 import { server } from '../../../../server';
 import { invalidUserPassword, validUser } from '../../../userConfiguration';
+import {
+    deleteUser,
+    getRefreshTokenFromAuthId,
+} from '../../../../dataStore/testingQueries';
 
 describe('Checks if the auth route is available', function () {
     it('Checks if the auth route is setup properly.', function (done) {

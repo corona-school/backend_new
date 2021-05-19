@@ -1,0 +1,2 @@
+-- AddForeignKey
+ALTER TABLE "UserRoles" ADD FOREIGN KEY ("roleName") REFERENCES "Roles"("name") ON DELETE CASCADE ON UPDATE CASCADE;

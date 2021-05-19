@@ -1,5 +1,5 @@
-import { disconnectPrisma } from '../services/dataStore';
 import { logInfo } from '../services/logger';
+import { disconnectPrisma } from '../dataStore/testingQueries';
 
 after(async () => {
     await disconnectPrisma();

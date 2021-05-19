@@ -1,13 +1,10 @@
-import {
-    addUser,
-    deleteUser,
-    findUser,
-    getEmailNotifications,
-} from '../../../../services/dataStore';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import { server } from '../../../../server';
 import { invalidUserEmail, validUser } from '../../../userConfiguration';
+import { addUser, findUser } from '../../../../dataStore/types/user';
+import { deleteUser } from '../../../../dataStore/testingQueries';
+import { getEmailNotifications } from '../../../../dataStore/dataStore';
 
 process.env.NODE_ENV = 'test';
 chai.use(chaiHttp);
@@ -67,11 +64,11 @@ describe('Try changing Email', function () {
                                 'Email has been updated',
                                 'Improper message returned'
                             );
-                            const updatedUser = await findUser(
-                                invalidUserEmail.email
-                            );
-                            chai.assert.lengthOf(
-                                updatedUser,
+                            const updatedUsers = await findUser({
+                                email: invalidUserEmail.email,
+                            });
+                            chai.assert.equal(
+                                updatedUsers.count,
                                 1,
                                 'Could not find Updated User. Possible update propagation issue'
                             );

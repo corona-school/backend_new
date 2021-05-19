@@ -3,7 +3,7 @@ import { logError } from '../../services/logger';
 import {
     addTextNotification,
     markTextNotification,
-} from '../../services/dataStore';
+} from '../../dataStore/dataStore';
 
 let mailjetTextAPI: mailjet.SMS.Client;
 
@@ -30,18 +30,17 @@ export abstract class baseTemplate {
 
     async forced_send(): Promise<{ status: number; res: string }> {
         try {
-            const emailAPI = await mailjetTextAPI
-                .post('sms-send')
-                .request(this.request);
-
             const sms = await addTextNotification(
                 this.sender,
                 this.receiver,
                 this.text,
                 'sent'
             );
-            this.notificationID = sms.res;
+            const smsAPI = await mailjetTextAPI
+                .post('sms-send')
+                .request(this.request);
 
+            this.notificationID = sms.res;
             return {
                 status: 200,
                 res: this.notificationID,

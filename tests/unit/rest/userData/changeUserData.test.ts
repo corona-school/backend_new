@@ -1,4 +1,3 @@
-import { addUser, deleteUser, findUser } from '../../../../services/dataStore';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import { server } from '../../../../server';
@@ -7,6 +6,8 @@ import {
     invalidUserEmail,
     validUser,
 } from '../../../userConfiguration';
+import {addUser, findUser} from "../../../../dataStore/types/user";
+import {deleteUser} from "../../../../dataStore/testingQueries";
 
 process.env.NODE_ENV = 'test';
 chai.use(chaiHttp);
@@ -66,18 +67,18 @@ describe('Try changing user data', function () {
                                 'Improper message received'
                             );
                             const updateId = response.body.response.data;
-                            const updatedUser = await findUser(
-                                alternateUser.email
-                            );
+                            const updatedUsers = await findUser({
+                                email: alternateUser.email,
+                            });
 
-                            chai.assert.lengthOf(
-                                updatedUser,
+                            chai.assert.equal(
+                                updatedUsers.count,
                                 1,
                                 'Error in the user data. Does not match with the update'
                             );
                             chai.assert.equal(
                                 updateId,
-                                updatedUser[0].id,
+                                updatedUsers.users[0].id,
                                 'Incorrect user was updated?'
                             );
                             done();
