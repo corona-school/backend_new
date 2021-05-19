@@ -3,7 +3,7 @@ import { logError } from '../../services/logger';
 import {
     addTextNotification,
     markTextNotification,
-} from '../../services/dataStore';
+} from '../../dataStore/dataStore';
 
 let mailjetTextAPI: mailjet.SMS.Client;
 

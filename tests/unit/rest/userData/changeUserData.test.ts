@@ -1,4 +1,3 @@
-import { addUser, deleteUser, findUser } from '../../../../services/dataStore';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import { server } from '../../../../server';
@@ -7,6 +6,8 @@ import {
     invalidUserEmail,
     validUser,
 } from '../../../userConfiguration';
+import {addUser, findUser} from "../../../../dataStore/types/user";
+import {deleteUser} from "../../../../dataStore/testingQueries";
 
 process.env.NODE_ENV = 'test';
 chai.use(chaiHttp);

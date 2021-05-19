@@ -1,12 +1,11 @@
-import {
-    getPendingEmailNotifications,
-    getPendingTextNotifications,
-    markTextNotification,
-} from './dataStore';
 import { logError, logInfo } from './logger';
 import mailjet from 'node-mailjet';
 import { test_notification } from '../mailjet/mailTemplates/test_notification';
 import { sms } from '../mailjet/smsTemplates/sms';
+import {
+    getPendingEmailNotifications,
+    getPendingTextNotifications,
+} from '../dataStore/dataStore';
 
 let mailjetTextAPI: mailjet.SMS.Client;
 

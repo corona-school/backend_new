@@ -49,31 +49,14 @@ model Admin {
   user   User   @relation(fields: [userId], references: [id])
 }
 
-model Roles {
-  id         String      @id @default(cuid())
-  name       String      @unique
-  autoassign Boolean     @default(false)
-  level      Int
-  UserRoles  UserRoles[]
-}
-
 model UserRoles {
   id        String   @id @default(cuid())
   createdOn DateTime @default(now())
   userId    String
   roleName  String
-  role      Roles    @relation(fields: [roleName], references: [name])
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, roleName])
-}
-
-model Tasks {
-  id               String   @id @default(cuid())
-  name             String @unique
-  minLevelRequired Int
-  createdOn        DateTime @default(now())
-
 }
 
 model Offer {
@@ -166,11 +149,4 @@ enum NotificationStatus {
 enum NotificationPriority {
   high
   low
-}
-
-enum RolePriority {
-  admin
-  volunteer
-  pupil
-  user
 }

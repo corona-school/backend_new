@@ -1,13 +1,10 @@
-import {
-    addUser,
-    deleteUser,
-    findUser,
-    getEmailNotifications,
-} from '../../../../services/dataStore';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import { server } from '../../../../server';
 import { invalidUserEmail, validUser } from '../../../userConfiguration';
+import { addUser, findUser } from '../../../../dataStore/types/user';
+import { deleteUser } from '../../../../dataStore/testingQueries';
+import { getEmailNotifications } from '../../../../dataStore/dataStore';
 
 process.env.NODE_ENV = 'test';
 chai.use(chaiHttp);

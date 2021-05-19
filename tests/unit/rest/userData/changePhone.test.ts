@@ -1,13 +1,14 @@
 import {
     addUser,
-    deleteUser,
     findUser,
-    getTextNotifications,
-} from '../../../../services/dataStore';
+} from '../../../../dataStore/types/user';
+
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import { server } from '../../../../server';
 import { invalidUserPhone, validUser } from '../../../userConfiguration';
+import {deleteUser} from "../../../../dataStore/testingQueries";
+import {getTextNotifications} from "../../../../dataStore/dataStore";
 
 process.env.NODE_ENV = 'test';
 chai.use(chaiHttp);

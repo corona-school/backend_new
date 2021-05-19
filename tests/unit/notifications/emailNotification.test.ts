@@ -1,11 +1,10 @@
+import { addUser } from '../../../dataStore/types/user';
+
 process.env.NODE_ENV = 'test';
 import { assert } from 'chai';
 import { test_notification } from '../../../mailjet/mailTemplates/test_notification';
-import {
-    addUser,
-    deleteUser,
-    getPendingEmailNotificationIds,
-} from '../../../services/dataStore';
+import { deleteUser } from '../../../dataStore/testingQueries';
+import { getPendingEmailNotificationIds } from '../../../dataStore/dataStore';
 
 describe.skip('Test email notifications', function () {
     before(async function () {

@@ -1,15 +1,4 @@
-import {
-    addUser,
-    deleteTestRoles,
-    deleteUser,
-    findRole,
-    getUserRole,
-    setupTestRoles,
-    setupTestTasks,
-    setupTestUserAdminRole,
-    setupTestUserPupilRole,
-    tearDownTestTasks,
-} from '../../../../services/dataStore';
+import { addUser, getUserRole } from '../../../../dataStore/types/user';
 
 process.env.NODE_ENV = 'test';
 import chai from 'chai';
@@ -17,18 +6,19 @@ import chaiHttp from 'chai-http';
 chai.use(chaiHttp);
 import { server } from '../../../../server';
 import { invalidUserPhone, validUser } from '../../../userConfiguration';
+import {
+    deleteUser,
+    setupTestUserAdminRole,
+    setupTestUserPupilRole,
+} from '../../../../dataStore/testingQueries';
 
 describe('Try to assign roles to user', async function () {
     before(async function () {
         const user = await addUser(validUser);
-        await setupTestRoles();
         await setupTestUserAdminRole(user.id);
-        await setupTestTasks();
     });
     after(async function () {
         await deleteUser(validUser.email);
-        await deleteTestRoles();
-        await tearDownTestTasks();
     });
     it('Assigns a role with login credentials that allow role assignment', function (done) {
         const loginDetail = {
@@ -73,14 +63,10 @@ describe('Try to assign roles to user', async function () {
 describe('Try to create roles', async function () {
     before(async function () {
         const user = await addUser(validUser);
-        await setupTestRoles();
         await setupTestUserPupilRole(user.id);
-        await setupTestTasks();
     });
     after(async function () {
         await deleteUser(validUser.email);
-        await deleteTestRoles();
-        await tearDownTestTasks();
     });
 
     it('Create a role with login credentials that dont allow role assignment', function (done) {
@@ -101,6 +87,7 @@ describe('Try to create roles', async function () {
                     .send({ role: 'unitTestVolunteer' })
                     .end(async (error, response) => {
                         try {
+                            console.log(response.text);
                             chai.assert.equal(response.status, 401);
                             chai.assert.equal(
                                 response.text,

@@ -3,7 +3,7 @@ import { logError } from '../../services/logger';
 import {
     addEmailNotification,
     markEmailNotification,
-} from '../../services/dataStore';
+} from '../../dataStore/dataStore';
 
 export const DEFAULTSENDERS = {
     anmeldung: '"Corona School Team" <anmeldung@corona-school.de>',

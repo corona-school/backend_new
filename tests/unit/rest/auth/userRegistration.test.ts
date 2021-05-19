@@ -7,10 +7,10 @@ chai.use(chaiHttp);
 import { server } from '../../../../server';
 import {
     addUser,
-    deleteUser,
     findUser,
     getUserCount,
-} from '../../../../services/dataStore';
+} from '../../../../dataStore/types/user';
+import { deleteUser } from '../../../../dataStore/testingQueries';
 
 describe('Checks if the auth route is available', function () {
     it('Checks if the auth route is setup properly.', function (done) {
