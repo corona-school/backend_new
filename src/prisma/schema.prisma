@@ -26,7 +26,18 @@ model User {
   Volunteer          Volunteer[]
   Notifications      EmailNotifications[]
   TextNotifications  TextNotifications[]
+  UserRoles          UserRoles[]
   AuthenticationData AuthenticationData[]
+}
+
+model UserRoles {
+  id        String   @id @default(cuid())
+  createdOn DateTime @default(now())
+  userId    String
+  roleName  String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, roleName])
 }
 
 model Pupil {

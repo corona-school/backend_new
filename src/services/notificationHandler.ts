@@ -2,7 +2,7 @@ import {
     getPendingEmailNotifications,
     getPendingTextNotifications,
     markTextNotification,
-} from './dataStore';
+} from '../dataStore/dataStore';
 import { logError, logInfo } from './logger';
 import mailjet from 'node-mailjet';
 import { test_notification } from '../mailjet/mailTemplates/test_notification';

@@ -1,56 +1,9 @@
 import { PrismaClient } from '@prisma/client';
-import { logError } from './logger';
-import bcrypt from 'bcrypt';
-import { token } from '../routes/tokenRefreshRoute';
 
-class dataStore {
+import { logError } from '../services/logger';
+
+export class dataStore {
     static prisma = new PrismaClient();
-}
-
-export async function findUser(email: string) {
-    return dataStore.prisma.user.findMany({
-        where: {
-            email: email,
-        },
-    });
-}
-
-export async function addUser(details: {
-    firstName: string;
-    lastName: string | null;
-    email: string;
-    notificationLevel: 'all' | 'necessary';
-    phone: string;
-    password: string;
-}) {
-    const user = await dataStore.prisma.user.create({
-        data: {
-            firstName: details.firstName,
-            lastName: details.lastName,
-            email: details.email,
-            phone: details.phone,
-        },
-    });
-
-    const saltRounds = 10;
-    const salt = await bcrypt.genSalt(saltRounds);
-    const hash = await bcrypt.hash(details.password, salt);
-
-    const authdata = await dataStore.prisma.authenticationData.create({
-        data: {
-            password: hash,
-            user: {
-                connect: {
-                    id: user.id,
-                },
-            },
-        },
-    });
-    return user;
-}
-
-export async function getUserCount() {
-    return dataStore.prisma.user.count();
 }
 
 export async function getPendingEmailNotifications() {
@@ -207,66 +160,16 @@ export async function markTextNotification(
     });
 }
 
-//This function is only intended to be used for modifying data model during tests.
-//Please refrain from using this in general use for deleting users.
-export async function deleteUser(email: string) {
-    const user = await findUser(email);
-    const authData = await dataStore.prisma.authenticationData.findMany({
-        where: {
-            userId: user[0].id,
-        },
+export async function assignRoleToUser(userId: string, roleName: string) {
+    return dataStore.prisma.userRoles.create({
+        data: { userId: userId, roleName: roleName },
     });
-    await dataStore.prisma.refreshToken.deleteMany({
-        where: {
-            authId: authData[0].id,
-        },
-    });
-    await dataStore.prisma.authenticationData.deleteMany({
-        where: {
-            userId: user[0].id,
-        },
-    });
-    await dataStore.prisma.emailNotifications.deleteMany({
-        where: {
-            recipientEmail: email,
-        },
-    });
-    if (user[0].phone !== null) {
-        await dataStore.prisma.textNotifications.deleteMany({
-            where: {
-                recipientPhone: user[0].phone,
-            },
-        });
-    }
-    await dataStore.prisma.user.delete({
-        where: {
-            email: email,
-        },
-    });
-
-    return true;
 }
-
-export async function getRefreshTokenFromAuthId(authId: string) {
-    const tokens = await dataStore.prisma.refreshToken.findFirst({
+export async function deleteRoleForUser(userId: string, roleName: string) {
+    return dataStore.prisma.userRoles.deleteMany({
         where: {
-            authId: authId,
+            userId: userId,
+            roleName: roleName,
         },
     });
-    return tokens === null ? { token: undefined } : tokens;
-}
-
-export async function disconnectPrisma() {
-    await dataStore.prisma.$disconnect();
-}
-
-export async function getRefreshTokenObject(refreshToken: string) {
-    const tokenObject = await dataStore.prisma.refreshToken.findMany({
-        where: {
-            token: refreshToken,
-            valid: true,
-        },
-    });
-
-    return tokenObject.length === 0 ? [] : tokenObject;
 }
