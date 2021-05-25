@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { logError, logInfo } from './logger';
 import {
@@ -14,37 +13,24 @@ import { keys } from '../utils/secretKeys';
 import { verificationEmail } from '../mailjet/mailTemplates/verificationEmail';
 import { resetPasswordNotification } from '../mailjet/mailTemplates/resetPassword';
 import { userRegister } from './userService';
-
-const prisma = new PrismaClient();
-
+import prisma from '../utils/prismaClient';
 interface IRegister {
     firstName: string;
     lastName: string | null;
     email: string;
     password: string;
 }
-
 interface ILogin {
     email: string;
     password: string;
 }
 
-export const registerUser = async ({
-    firstName,
-    email,
-    password,
-}: IRegister) => {
-    const user = await userRegister(
-        {
-            firstName,
-            email,
-        },
-        email
-    );
+export const registerUser = async (registrationData: IRegister) => {
+    const user = await userRegister(registrationData);
     if (user) {
         const saltRounds = 10;
         const salt = await bcrypt.genSalt(saltRounds);
-        const hash = await bcrypt.hash(password, salt);
+        const hash = await bcrypt.hash(registrationData.password, salt);
 
         await prisma.authenticationData.create({
             data: {

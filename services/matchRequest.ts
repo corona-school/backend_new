@@ -26,13 +26,14 @@ export const matchRequest = async (
 };
 
 export const deleteMatchRequest = async (matchRequestId: string) => {
-    await prisma.requestMatches.delete({
+    const deleteMatchRequest = await prisma.requestMatches.delete({
         where: {
             id: matchRequestId,
         },
     });
 
     return {
+        data: deleteMatchRequest,
         message: `${matchRequestId} match Request deleted`,
     };
 };
