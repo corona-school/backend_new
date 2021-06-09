@@ -6,6 +6,8 @@ import {
     generateEmailLink,
     generatePhoneLink,
     getUserAuthData,
+    userToPupil,
+    userToVolunteer,
 } from '../utils/helpers';
 import { logError, logInfo } from './logger';
 
@@ -190,9 +192,32 @@ export const deleteUserData = async ({ userId }: any) => {
     }
 };
 
-export const userUpdate = async (userData: any, userId: string) => {
+interface IUserData {
+    email?: string;
+    emailVerified?: boolean;
+    phone?: string;
+    phoneVerified?: boolean;
+    active?: boolean;
+    firstName?: string;
+    lastName?: string;
+    userType?: string | undefined;
+}
+
+export const userUpdate = async (userData: IUserData, userId: string) => {
     const dataKeys: string[] = Object.keys(userData);
     const findUser: User | null = await findUserById(userId);
+
+    if (userData.userType != undefined) {
+        if (userData.userType == 'volunteer') {
+            await userToVolunteer(userId);
+        }
+
+        if (userData.userType == 'pupil') {
+            await userToPupil(userId);
+        }
+
+        delete userData.userType;
+    }
 
     if (findUser != null) {
         const userUpdate = await prisma.user.update({
@@ -202,7 +227,7 @@ export const userUpdate = async (userData: any, userId: string) => {
             data: userData,
         });
 
-        if (dataKeys.includes('email')) {
+        if (dataKeys.includes('email') && userData['email']) {
             if (findUser.email != userData['email']) {
                 logInfo('Sending verification email to updated email');
 
@@ -216,6 +241,7 @@ export const userUpdate = async (userData: any, userId: string) => {
                 });
 
                 const emailLink = generateEmailLink(userUpdate);
+
                 const verificationEmailNotification = new verificationEmail(
                     userData['email'],
                     {
@@ -229,9 +255,9 @@ export const userUpdate = async (userData: any, userId: string) => {
             }
         }
 
-        if (dataKeys.includes('phone')) {
+        if (dataKeys.includes('phone') && userData['phone']) {
             if (findUser.phone != userData['phone']) {
-                logInfo('Sending verification message yo updated phone');
+                logInfo('Sending verification message to updated phone');
                 await prisma.user.update({
                     where: {
                         id: userUpdate.id,

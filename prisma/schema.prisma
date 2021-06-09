@@ -51,6 +51,11 @@ model Offer {
   volunteer             Volunteer               @relation(fields: [volunteerId], references: [id])
   volunteerId           String
   description           String
+  title                 String
+  category              String
+  tags                  String[]
+  target_group          String
+  times                 String
   VolunteerMatchRequest VolunteerMatchRequest[]
 }
 
@@ -64,9 +69,10 @@ model AuthenticationData {
 
 model PupilMatchRequest {
   id             String           @id @default(cuid())
+  createdAt      DateTime         @default(now())
   user           Pupil            @relation(fields: [requestor], references: [id])
   requestor      String
-  parameters     String[]
+  parameters     String
   RequestMatches RequestMatches[]
 }
 
@@ -80,9 +86,10 @@ model RefreshToken {
 
 model VolunteerMatchRequest {
   id             String           @id @default(cuid())
+  createdAt      DateTime         @default(now())
   user           Volunteer        @relation(fields: [requestor], references: [id])
   requestor      String
-  parameters     String[]
+  parameters     String
   offer          Offer            @relation(fields: [offerId], references: [id])
   offerId        String
   RequestMatches RequestMatches[]
@@ -94,6 +101,7 @@ model RequestMatches {
   volunteerReq   VolunteerMatchRequest @relation(fields: [volunteerReqId], references: [id])
   pupilReqId     String
   volunteerReqId String
+  @@unique([pupilReqId, volunteerReqId])
 }
 
 model EmailNotifications {
