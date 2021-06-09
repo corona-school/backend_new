@@ -13,9 +13,8 @@ import {
     deleteCourse,
     getCourseData,
 } from '../../services/courseService';
-// import { createOfferMatchRequest } from '../../services/offerMatchRequest';
-import { matchRequest } from '../../services/courseMatchService';
-import { createOfferMatchRequest } from '../../services/volunteerMatchRequest';
+import { createCourseMatch } from '../../services/courseMatchService';
+import { createInstructorMatchRequest } from '../../services/volunteerMatchRequest';
 
 export const changeEmail = async (
     req: Request,
@@ -239,7 +238,11 @@ export const createOffer = async (
             next(new Error('Unable to get userID'));
         }
 
-        const test = await createOfferMatchRequest(offerId, matchReq, userId);
+        const test = await createInstructorMatchRequest(
+            offerId,
+            matchReq,
+            userId
+        );
         res.json({
             response: test,
         });
@@ -285,7 +288,7 @@ export const match_ = async (
             next(new Error('Unable to get userID'));
         }
 
-        const match = await matchRequest(pupilID, volunteerID);
+        const match = await createCourseMatch(pupilID, volunteerID);
         res.json({
             response: match,
         });

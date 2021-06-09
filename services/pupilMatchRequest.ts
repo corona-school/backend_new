@@ -38,22 +38,20 @@ export const createPupilMatchRequest = async (
         }
     }
 
-    const createPupilRequest = await prisma.courseParticipantMatchRequest.create(
-        {
-            data: {
-                parameters: JSON.stringify(courseOffers),
-                pupil: {
-                    connect: {
-                        id: pupil.id,
-                    },
+    const createPupilMatch = await prisma.courseParticipantMatchRequest.create({
+        data: {
+            parameters: JSON.stringify(courseOffers),
+            pupil: {
+                connect: {
+                    id: pupil.id,
                 },
             },
-        }
-    );
+        },
+    });
 
     return {
-        data: createPupilRequest,
-        message: 'Pupil match request created',
+        data: createPupilMatch,
+        message: 'Pupil match created',
     };
 };
 
@@ -69,16 +67,14 @@ export const deletePupilMatchRequest = async (
         throw new Error('User must be a pupil to delete a match request');
     }
 
-    const deleteMatchRequest = await prisma.courseParticipantMatchRequest.delete(
-        {
-            where: {
-                id: matchRequestId,
-            },
-        }
-    );
+    const deletePupilMatch = await prisma.courseParticipantMatchRequest.delete({
+        where: {
+            id: matchRequestId,
+        },
+    });
 
     return {
-        data: deleteMatchRequest,
-        message: 'Pupil match request deleted',
+        data: deletePupilMatch,
+        message: 'Pupil match deleted',
     };
 };

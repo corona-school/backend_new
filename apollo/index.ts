@@ -27,18 +27,21 @@ export const ConfigureApollo = (app: express.Application): void => {
                         if (err != null) {
                             if (err.name === 'TokenExpiredError') {
                                 return {
+                                    message: 'Auth failed - TokenExpired',
                                     isAuth: false,
                                 };
                             }
 
                             if (err.name === 'JsonWebTokenError') {
                                 return {
+                                    message: 'Auth failed -TokenError',
                                     isAuth: false,
                                 };
                             }
                         }
 
                         return {
+                            message: 'Access granted',
                             isAuth: true,
                         };
                     }

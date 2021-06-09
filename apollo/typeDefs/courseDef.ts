@@ -1,7 +1,6 @@
 import { gql } from 'apollo-server-express';
 
 export default gql`
-    
     type Course {
         title: String
         category: String
@@ -42,7 +41,7 @@ export default gql`
     }
 
     # Return type for mutations
-    type OfferReturnType {
+    type CourseReturnType {
         data: Course
         message: String
     }
@@ -56,12 +55,12 @@ export default gql`
         message: String
     }
 
-    type CreateOfferRequestReturnType {
+    type CreateVolunteerReturnType {
         data: [String]
         message: String
     }
 
-    type deleteOfferRequestReturnType {
+    type deleteVolunteerReturnType {
         data: String
         message: String
     }
@@ -82,7 +81,7 @@ export default gql`
         volunteerReqId: String
     }
 
-    type RequestMatchReturnType {
+    type CourseMatchReturnType {
         data: MatchRequestDataObject
         message: String
     }
@@ -94,20 +93,20 @@ export default gql`
 
     # Mutration types for data manipulation
     extend type Mutation {
-        createOffer(courseData: CourseInput, userId: String): OfferReturnType
+        createCourse(courseData: CourseInput, userId: String): CourseReturnType
 
-        deleteOffer(offerId: String, userId: String): deleteReturnType
+        deleteCourse(offerId: String, userId: String): deleteReturnType
 
-        createOfferMatch(
+        createVolunteerMatch(
             offerId: String
             NumberOfMatchReq: Int
             userId: String
-        ): CreateOfferRequestReturnType
+        ): CreateVolunteerReturnType
 
-        deleteOfferMatch(
+        deleteVolunteerMatch(
             matchRequestId: String
             userId: String
-        ): deleteOfferRequestReturnType
+        ): deleteVolunteerReturnType
 
         createPupilMatch(offers: [PupilOffer], userId: String): PupilReturnType
 
@@ -119,8 +118,8 @@ export default gql`
         createMatch(
             pupilMatchId: String
             volunteerMatchId: String
-        ): RequestMatchReturnType
+        ): CourseMatchReturnType
 
-        deleteMatch(matchId: String): RequestMatchReturnType
+        deleteMatch(matchId: String): CourseMatchReturnType
     }
 `;

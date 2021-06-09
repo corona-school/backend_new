@@ -4,7 +4,7 @@ export const createCourseMatch = async (
     pupilMatchId: string,
     volunteerMatchId: string
 ) => {
-    const matchRequest = await prisma.courseMatch.create({
+    const createMatch = await prisma.courseMatch.create({
         data: {
             active: true,
             participantMatchRequest: {
@@ -21,20 +21,20 @@ export const createCourseMatch = async (
     });
 
     return {
-        data: matchRequest,
+        data: createMatch,
         message: 'Course match created',
     };
 };
 
 export const deleteCourseMatch = async (matchRequestId: string) => {
-    const deleteMatchRequest = await prisma.courseMatch.delete({
+    const deleteMatch = await prisma.courseMatch.delete({
         where: {
             id: matchRequestId,
         },
     });
 
     return {
-        data: deleteMatchRequest,
+        data: deleteMatch,
         message: `Course match deleted`,
     };
 };

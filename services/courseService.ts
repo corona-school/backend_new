@@ -80,10 +80,7 @@ export const deleteCourse = async (offerId: string, userId: string) => {
         },
     });
 
-    const transation = await prisma.$transaction([
-        deleteVolunteersOnCourses,
-        deleteCourseData,
-    ]);
+    await prisma.$transaction([deleteVolunteersOnCourses, deleteCourseData]);
 
     return {
         data: deleteCourse,

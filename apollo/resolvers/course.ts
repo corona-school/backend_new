@@ -4,12 +4,12 @@ import {
     getCourseData,
 } from '../../services/courseService';
 import {
-    deleteMatchRequest,
-    matchRequest,
+    deleteCourseMatch,
+    createCourseMatch,
 } from '../../services/courseMatchService';
 import {
-    createOfferMatchRequest,
-    deleteOfferMatchRequest,
+    createInstructorMatchRequest,
+    deleteInstructorMatchRequest,
 } from '../../services/volunteerMatchRequest';
 import {
     createPupilMatchRequest,
@@ -19,38 +19,51 @@ import {
 export default {
     Query: {
         getCourse: async (parent: any, { id }: any, ctx: any) => {
-            // if (!ctx.user) throw new Error('Authentication failed');
-
-            console.log('-->', ctx);
-
-            // const offer = await getCourseData(id);
-            // if (offer) {
-            //     offer.times = JSON.parse(offer.times);
-            // }
-
-            // return offer;
+            const offer = await getCourseData(id);
+            return offer;
         },
     },
 
     Mutation: {
-        createOffer: async (parent: any, { courseData, userId }: any) => {
-            // const create_ = await createCourse(courseData, userId);
-            // if (create_) {
-            //     create_.data.times = JSON.parse(create_.data.times);
-            // }
-            // return create_;
+        createCourse: async (
+            parent: any,
+            { courseData, userId }: any,
+            ctx: any
+        ) => {
+            if (!ctx.isAuth) {
+                throw new Error(ctx.message);
+            }
+
+            const create_ = await createCourse(courseData, userId);
+            if (create_) {
+                create_.data.times = JSON.parse(create_.data.times);
+            }
+            return create_;
         },
 
-        deleteOffer: async (parent: any, { offerId, userId }: any) => {
+        deleteCourse: async (
+            parent: any,
+            { offerId, userId }: any,
+            ctx: any
+        ) => {
+            if (!ctx.isAuth) {
+                throw new Error(ctx.message);
+            }
+
             const delete_ = await deleteCourse(offerId, userId);
             return delete_;
         },
 
-        createOfferMatch: async (
+        createVolunteerMatch: async (
             parent: any,
-            { offerId, NumberOfMatchReq, userId }: any
+            { offerId, NumberOfMatchReq, userId }: any,
+            ctx: any
         ) => {
-            const create_request = await createOfferMatchRequest(
+            if (!ctx.isAuth) {
+                throw new Error(ctx.message);
+            }
+
+            const create_request = await createInstructorMatchRequest(
                 offerId,
                 NumberOfMatchReq,
                 userId
@@ -59,11 +72,16 @@ export default {
             return create_request;
         },
 
-        deleteOfferMatch: async (
+        deleteVolunteerMatch: async (
             parent: any,
-            { matchRequestId, userId }: any
+            { matchRequestId, userId }: any,
+            ctx: any
         ) => {
-            const delete_request = await deleteOfferMatchRequest(
+            if (!ctx.isAuth) {
+                throw new Error(ctx.message);
+            }
+
+            const delete_request = await deleteInstructorMatchRequest(
                 matchRequestId,
                 userId
             );
@@ -71,7 +89,15 @@ export default {
             return delete_request;
         },
 
-        createPupilMatch: async (parent: any, { offers, userId }: any) => {
+        createPupilMatch: async (
+            parent: any,
+            { offers, userId }: any,
+            ctx: any
+        ) => {
+            if (!ctx.isAuth) {
+                throw new Error(ctx.message);
+            }
+
             const create_request = await createPupilMatchRequest(
                 offers,
                 userId
@@ -82,8 +108,13 @@ export default {
 
         deletePupilMatch: async (
             parent: any,
-            { matchRequestId, userId }: any
+            { matchRequestId, userId }: any,
+            ctx: any
         ) => {
+            if (!ctx.isAuth) {
+                throw new Error(ctx.message);
+            }
+
             const delete_request = await deletePupilMatchRequest(
                 matchRequestId,
                 userId
@@ -94,9 +125,14 @@ export default {
 
         createMatch: async (
             _: any,
-            { pupilMatchId, volunteerMatchId }: any
+            { pupilMatchId, volunteerMatchId }: any,
+            ctx: any
         ) => {
-            const delete_request = await matchRequest(
+            if (!ctx.isAuth) {
+                throw new Error(ctx.message);
+            }
+
+            const delete_request = await createCourseMatch(
                 pupilMatchId,
                 volunteerMatchId
             );
@@ -104,8 +140,12 @@ export default {
             return delete_request;
         },
 
-        deleteMatch: async (parent: any, { matchId }: any) => {
-            const delete_request = await deleteMatchRequest(matchId);
+        deleteMatch: async (parent: any, { matchId }: any, ctx: any) => {
+            if (!ctx.isAuth) {
+                throw new Error(ctx.message);
+            }
+
+            const delete_request = await deleteCourseMatch(matchId);
 
             return delete_request;
         },

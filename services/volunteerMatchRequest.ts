@@ -16,7 +16,7 @@ if (process.env.valid_until != undefined) {
     logError('(Valid_until) environment variable not defined');
 }
 
-export const createInstructorRequest = async (
+export const createInstructorMatchRequest = async (
     offerId: string,
     NumberOfMatchReq: number,
     userId: string
@@ -79,7 +79,7 @@ export const createInstructorRequest = async (
     }
 };
 
-export const deleteInstructorRequest = async (
+export const deleteInstructorMatchRequest = async (
     matchRequestId: string,
     userId: string
 ) => {
@@ -91,11 +91,13 @@ export const deleteInstructorRequest = async (
         throw new Error('User must be a volunteer to delete a match request');
     }
 
-    const deleteMatch = await prisma.courseInstructorMatchRequest.delete({
-        where: {
-            id: matchRequestId,
-        },
-    });
+    const deleteInstructorMatch = await prisma.courseInstructorMatchRequest.delete(
+        {
+            where: {
+                id: matchRequestId,
+            },
+        }
+    );
 
     return {
         data: matchRequestId,
