@@ -9,9 +9,9 @@ import { getVolunteer } from '../utils/helpers';
 import prisma from '../utils/prismaClient';
 import { logError, logInfo } from './logger';
 
-let valid_until: moment.Moment;
+let valid_until_env: moment.Moment;
 if (process.env.valid_until != undefined) {
-    valid_until = moment(process.env.valid_until, 'YYYY-MM-DD hh:mm:ss');
+    valid_until_env = moment(process.env.valid_until, 'YYYY-MM-DD hh:mm:ss');
 } else {
     logError('(Valid_until) environment variable not defined');
 }
@@ -41,7 +41,9 @@ export const createInstructorRequest = async (
 
     if (courseData) {
         const courseTimes = JSON.parse(courseData.times);
-        validUntil = [calculateValidTimestamps(valid_until, courseTimes[0])];
+        validUntil = [
+            calculateValidTimestamps(valid_until_env, courseTimes[0]),
+        ];
 
         const query = prisma.courseInstructorMatchRequest.create({
             data: {
