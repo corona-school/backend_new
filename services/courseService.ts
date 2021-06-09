@@ -1,18 +1,16 @@
-import { Offer, Volunteer } from '@prisma/client';
+import { CourseOffer, Volunteer } from '@prisma/client';
 import { getVolunteer } from '../utils/helpers';
 import prisma from '../utils/prismaClient';
 import { logError, logInfo } from './logger';
-interface ICourseDates {
-    startTime: Date;
-    endTime: Date;
-}
 interface ICourse {
     title: string;
+    description: string;
     category: string;
     tags: string[];
-    target_group: string;
-    times: ICourseDates[];
-    description: string;
+    imageKey?: string;
+    times: string;
+    participantContactEmail?: string;
+    targetGroup: string;
 }
 
 export const createCourse = async (courseData: ICourse, userId: string) => {
@@ -24,26 +22,30 @@ export const createCourse = async (courseData: ICourse, userId: string) => {
         throw new Error('User must be a volunteer');
     }
 
-    const createCourse = await prisma.offer.create({
-        data: {
-            title: courseData.title,
-            category: courseData.category,
-            tags: courseData.tags,
-            target_group: courseData.target_group,
-            times: JSON.stringify(courseData.times),
-            description: courseData.description,
-            volunteer: {
-                connect: {
-                    id: volunteer.id,
+    if (courseData) {
+        const createCourse = await prisma.courseOffer.create({
+            data: {
+                title: courseData.title,
+                description: courseData.description,
+                category: courseData.category,
+                tags: courseData.tags,
+                imageKey: courseData.imageKey,
+                times: JSON.stringify(courseData.times),
+                participantContactEmail: courseData.participantContactEmail,
+                targetGroup: courseData.targetGroup,
+                volunteers: {
+                    create: {
+                        volunteerId: volunteer.id,
+                    },
                 },
             },
-        },
-    });
+        });
 
-    return {
-        data: createCourse,
-        message: 'Course offer created',
-    };
+        return {
+            data: createCourse,
+            message: 'Course offer created',
+        };
+    }
 };
 
 export const deleteCourse = async (offerId: string, userId: string) => {
@@ -55,11 +57,11 @@ export const deleteCourse = async (offerId: string, userId: string) => {
         throw new Error('User must be a Volunteer');
     }
 
-    const deleteCourse = await prisma.offer.deleteMany({
+    const deleteVolunteersOnCourses = prisma.volunteersOnCourses.deleteMany({
         where: {
             AND: [
                 {
-                    id: {
+                    courseOfferId: {
                         equals: offerId,
                     },
                 },
@@ -72,6 +74,17 @@ export const deleteCourse = async (offerId: string, userId: string) => {
         },
     });
 
+    const deleteCourseData = prisma.courseOffer.delete({
+        where: {
+            id: offerId,
+        },
+    });
+
+    const transation = await prisma.$transaction([
+        deleteVolunteersOnCourses,
+        deleteCourseData,
+    ]);
+
     return {
         data: deleteCourse,
         message: 'Course offer deleted',
@@ -81,7 +94,7 @@ export const deleteCourse = async (offerId: string, userId: string) => {
 export const getCourseData = async (offerId: string) => {
     logInfo(`Getting course data with offerID : ${offerId}`);
 
-    const courseData: Offer | null = await prisma.offer.findUnique({
+    const courseData: CourseOffer | null = await prisma.courseOffer.findUnique({
         where: {
             id: offerId,
         },

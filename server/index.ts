@@ -25,9 +25,9 @@ app.use(
             process.env.NODE_ENV === 'production' ? undefined : false,
     })
 );
+authentication(app);
 ConfigureApollo(app);
 ConfigureREST(app);
-authentication(app);
 token(app);
 userdata(app);
 verification(app);

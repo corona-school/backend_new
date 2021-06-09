@@ -297,7 +297,11 @@ export const userRegister = async (userData: {
     if (findUser == null) {
         //No user in our record, create a new user
         const createUser = await prisma.user.create({
-            data: userData,
+            data: {
+                firstName: userData.firstName,
+                email: userData.email,
+                lastName: userData.lastName,
+            },
         });
 
         return createUser;

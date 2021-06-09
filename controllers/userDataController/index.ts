@@ -14,8 +14,8 @@ import {
     getCourseData,
 } from '../../services/courseService';
 // import { createOfferMatchRequest } from '../../services/offerMatchRequest';
-import { matchRequest } from '../../services/matchRequest';
-import { createOfferMatchRequest } from '../../services/offerMatchRequest';
+import { matchRequest } from '../../services/courseMatchService';
+import { createOfferMatchRequest } from '../../services/volunteerMatchRequest';
 
 export const changeEmail = async (
     req: Request,
@@ -35,7 +35,7 @@ export const changeEmail = async (
 
     try {
         // Getting the user id from auth middleware
-        const userId = (<any>req).user.userid._id;
+        const userId = (<any>req).user.payload.userid;
 
         if (userId == null || userId == undefined) {
             logError('unable to get userID');
@@ -71,7 +71,7 @@ export const changePhone = async (
 
     try {
         // Getting the user id from auth middleware
-        const userId = (<any>req).user.userid._id;
+        const userId = (<any>req).user.payload.userid;
 
         if (userId == null || userId == undefined) {
             logError('unable to get userID');
@@ -96,7 +96,7 @@ export const userDataDelete = async (
 
     try {
         // Getting the user id from auth middleware
-        const userId = (<any>req).user.userid._id;
+        const userId = (<any>req).user.payload.userid;
         if (userId == null || userId == undefined) {
             logError('Unable to get userID');
             next(new Error('Unable to get userID'));
@@ -120,7 +120,7 @@ export const updateUserData = async (
 
     try {
         // Getting the user id from auth middleware
-        const userId = (<any>req).user.userid._id;
+        const userId = (<any>req).user.payload.userid;
         const userData = req.body;
 
         if (userId == null || userId == undefined) {
@@ -146,7 +146,7 @@ export const courseCreate_ = async (
     next: NextFunction
 ) => {
     try {
-        const userId = (<any>req).user.userid._id;
+        const userId = (<any>req).user.payload.userid;
         const courseData = req.body;
 
         if (userId == null || userId == undefined) {
@@ -155,6 +155,29 @@ export const courseCreate_ = async (
         }
 
         const test = await createCourse(courseData, userId);
+        res.json({
+            response: test,
+        });
+    } catch (error) {
+        next(new Error(error.message));
+    }
+};
+
+export const courseDelete_ = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const userId = (<any>req).user.payload.userid;
+        const { offerId } = req.body;
+
+        if (userId == null || userId == undefined) {
+            logError('Unable to get userID');
+            next(new Error('Unable to get userID'));
+        }
+
+        const test = await deleteCourse(offerId, userId);
         res.json({
             response: test,
         });
@@ -185,7 +208,7 @@ export const courseDeactivate = async (
     next: NextFunction
 ) => {
     try {
-        const userId = (<any>req).user.userid._id;
+        const userId = (<any>req).user.payload.userid;
         const { offerId } = req.body;
 
         if (userId == null || userId == undefined) {
@@ -208,7 +231,7 @@ export const createOffer = async (
     next: NextFunction
 ) => {
     try {
-        const userId = (<any>req).user.userid._id;
+        const userId = (<any>req).user.payload.userid;
         const { offerId, matchReq } = req.body;
 
         if (userId == null || userId == undefined) {
@@ -231,7 +254,7 @@ export const pupil = async (
     next: NextFunction
 ) => {
     try {
-        const userId = (<any>req).user.userid._id;
+        const userId = (<any>req).user.payload.userid;
         const { offers } = req.body;
 
         if (userId == null || userId == undefined) {
@@ -254,7 +277,7 @@ export const match_ = async (
     next: NextFunction
 ) => {
     try {
-        const userId = (<any>req).user.userid._id;
+        const userId = (<any>req).user.payload.userid;
         const { pupilID, volunteerID } = req.body;
 
         if (userId == null || userId == undefined) {

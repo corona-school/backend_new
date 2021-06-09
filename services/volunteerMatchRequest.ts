@@ -1,8 +1,8 @@
 import {
-    Offer,
+    CourseInstructorMatchRequest,
+    CourseOffer,
     Prisma,
     Volunteer,
-    VolunteerMatchRequest,
 } from '@prisma/client';
 import moment from 'moment';
 import { getVolunteer } from '../utils/helpers';
@@ -16,7 +16,7 @@ if (process.env.valid_until != undefined) {
     logError('(Valid_until) environment variable not defined');
 }
 
-export const createOfferMatchRequest = async (
+export const createInstructorRequest = async (
     offerId: string,
     NumberOfMatchReq: number,
     userId: string
@@ -29,44 +29,23 @@ export const createOfferMatchRequest = async (
         throw new Error('User must be a volunteer to create a match request');
     }
 
-    const courseData: Offer | null = await prisma.offer.findUnique({
+    const courseData: CourseOffer | null = await prisma.courseOffer.findUnique({
         where: {
             id: offerId,
         },
     });
 
-    let MatchReq: Prisma.Prisma__VolunteerMatchRequestClient<VolunteerMatchRequest>[] = [],
-        valid: number[] = [],
+    let MatchReq: Prisma.Prisma__CourseInstructorMatchRequestClient<CourseInstructorMatchRequest>[] = [],
+        validUntil: number[] = [],
         transactionIds: string[] = [];
 
     if (courseData) {
         const courseTimes = JSON.parse(courseData.times);
+        validUntil = [calculateValidTimestamps(valid_until, courseTimes[0])];
 
-        courseTimes.forEach(
-            (courseTime: { startTime: string; endTime: string }) => {
-                valid = [
-                    ...valid,
-                    calculateValidTimestamps(
-                        valid_until,
-                        courseTimes.startTime
-                    ),
-                ];
-            }
-        );
-
-        let params = {
-            valid_until: valid,
-            target_group: courseData.target_group,
-        };
-
-        const query = prisma.volunteerMatchRequest.create({
+        const query = prisma.courseInstructorMatchRequest.create({
             data: {
-                parameters: JSON.stringify(params),
-                user: {
-                    connect: {
-                        id: volunteer.id,
-                    },
-                },
+                validUnitil: JSON.stringify(validUntil),
                 offer: {
                     connect: {
                         id: offerId,
@@ -98,7 +77,7 @@ export const createOfferMatchRequest = async (
     }
 };
 
-export const deleteOfferMatchRequest = async (
+export const deleteInstructorRequest = async (
     matchRequestId: string,
     userId: string
 ) => {
@@ -110,7 +89,7 @@ export const deleteOfferMatchRequest = async (
         throw new Error('User must be a volunteer to delete a match request');
     }
 
-    const deleteMatch = await prisma.volunteerMatchRequest.delete({
+    const deleteMatch = await prisma.courseInstructorMatchRequest.delete({
         where: {
             id: matchRequestId,
         },
@@ -124,9 +103,21 @@ export const deleteOfferMatchRequest = async (
 
 const calculateValidTimestamps = (
     valid_until: moment.Moment,
-    courseDate: string
+    courseDate: { startTime: string; endTime: string }
 ): number => {
-    const milliseconds = valid_until.diff(moment(courseDate));
+    const milliseconds = valid_until.diff(moment(courseDate.startTime));
+
+    const days = moment
+        .duration(valid_until.diff(moment(courseDate.startTime)))
+        .days();
+    const hours = moment
+        .duration(valid_until.diff(moment(courseDate.startTime)))
+        .hours();
+    const minutes = moment
+        .duration(valid_until.diff(moment(courseDate.startTime)))
+        .minutes();
+
+    const remainingTime = `${days} days ${hours} hours & ${minutes} minutes`;
 
     return milliseconds;
 };

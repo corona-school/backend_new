@@ -22,11 +22,13 @@ export const createPupilMatchRequest = async (
 
     let courseOffers: any = [];
     for (let data of offers) {
-        const findCourse = await prisma.volunteerMatchRequest.findUnique({
-            where: {
-                id: data.matchOfferId,
-            },
-        });
+        const findCourse = await prisma.courseInstructorMatchRequest.findUnique(
+            {
+                where: {
+                    id: data.matchOfferId,
+                },
+            }
+        );
 
         if (findCourse) {
             courseOffers.push({
@@ -36,16 +38,18 @@ export const createPupilMatchRequest = async (
         }
     }
 
-    const createPupilRequest = await prisma.pupilMatchRequest.create({
-        data: {
-            parameters: JSON.stringify(courseOffers),
-            user: {
-                connect: {
-                    id: pupil.id,
+    const createPupilRequest = await prisma.courseParticipantMatchRequest.create(
+        {
+            data: {
+                parameters: JSON.stringify(courseOffers),
+                pupil: {
+                    connect: {
+                        id: pupil.id,
+                    },
                 },
             },
-        },
-    });
+        }
+    );
 
     return {
         data: createPupilRequest,
@@ -65,11 +69,13 @@ export const deletePupilMatchRequest = async (
         throw new Error('User must be a pupil to delete a match request');
     }
 
-    const deleteMatchRequest = await prisma.pupilMatchRequest.delete({
-        where: {
-            id: matchRequestId,
-        },
-    });
+    const deleteMatchRequest = await prisma.courseParticipantMatchRequest.delete(
+        {
+            where: {
+                id: matchRequestId,
+            },
+        }
+    );
 
     return {
         data: deleteMatchRequest,

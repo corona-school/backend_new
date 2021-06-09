@@ -1,28 +1,13 @@
 import { gql } from 'apollo-server-express';
 
-const typeDefs = gql`
-    # types of data-models
-    type User {
-        firstName: String!
-        lastName: String
-        email: String!
-        emailVerified: Boolean
-        phone: String
-        phoneVerified: Boolean
-        active: Boolean
-    }
-
-    type ICourseDates {
-        startTime: String
-        endTime: String
-    }
-
+export default gql`
+    
     type Course {
         title: String
         category: String
         tags: [String]
         target_group: String
-        times: [ICourseDates]
+        times: String
         description: String
     }
 
@@ -103,15 +88,12 @@ const typeDefs = gql`
     }
 
     # Query types for the data-models
-    type Query {
-        ping: String
+    extend type Query {
         getCourse(id: ID!): Course
     }
 
     # Mutration types for data manipulation
-    type Mutation {
-        userRegister(userData: UserInput): User
-
+    extend type Mutation {
         createOffer(courseData: CourseInput, userId: String): OfferReturnType
 
         deleteOffer(offerId: String, userId: String): deleteReturnType
@@ -142,5 +124,3 @@ const typeDefs = gql`
         deleteMatch(matchId: String): RequestMatchReturnType
     }
 `;
-
-export default typeDefs;

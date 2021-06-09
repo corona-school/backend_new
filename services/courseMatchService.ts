@@ -1,17 +1,18 @@
 import prisma from '../utils/prismaClient';
 
-export const matchRequest = async (
+export const createCourseMatch = async (
     pupilMatchId: string,
     volunteerMatchId: string
 ) => {
-    const matchRequest = await prisma.requestMatches.create({
+    const matchRequest = await prisma.courseMatch.create({
         data: {
-            pupilReq: {
+            active: true,
+            participantMatchRequest: {
                 connect: {
                     id: pupilMatchId,
                 },
             },
-            volunteerReq: {
+            instructorMatchRequest: {
                 connect: {
                     id: volunteerMatchId,
                 },
@@ -21,12 +22,12 @@ export const matchRequest = async (
 
     return {
         data: matchRequest,
-        message: 'Match Request created',
+        message: 'Course match created',
     };
 };
 
-export const deleteMatchRequest = async (matchRequestId: string) => {
-    const deleteMatchRequest = await prisma.requestMatches.delete({
+export const deleteCourseMatch = async (matchRequestId: string) => {
+    const deleteMatchRequest = await prisma.courseMatch.delete({
         where: {
             id: matchRequestId,
         },
@@ -34,6 +35,6 @@ export const deleteMatchRequest = async (matchRequestId: string) => {
 
     return {
         data: deleteMatchRequest,
-        message: `${matchRequestId} match Request deleted`,
+        message: `Course match deleted`,
     };
 };

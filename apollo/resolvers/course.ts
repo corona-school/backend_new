@@ -1,55 +1,53 @@
-import { Offer } from '.prisma/client';
-import { IResolvers } from 'graphql-tools';
 import {
     createCourse,
     deleteCourse,
     getCourseData,
-} from '../services/courseService';
-import { deleteMatchRequest, matchRequest } from '../services/matchRequest';
+} from '../../services/courseService';
+import {
+    deleteMatchRequest,
+    matchRequest,
+} from '../../services/courseMatchService';
 import {
     createOfferMatchRequest,
     deleteOfferMatchRequest,
-} from '../services/offerMatchRequest';
+} from '../../services/volunteerMatchRequest';
 import {
     createPupilMatchRequest,
     deletePupilMatchRequest,
-} from '../services/pupilMatchRequest';
-import { userRegister } from '../services/userService';
+} from '../../services/pupilMatchRequest';
 
-const resolvers: IResolvers = {
+export default {
     Query: {
-        getCourse: async (_: any, { id }: Offer) => {
-            const offer = await getCourseData(id);
-            if (offer) {
-                offer.times = JSON.parse(offer.times);
-            }
+        getCourse: async (parent: any, { id }: any, ctx: any) => {
+            // if (!ctx.user) throw new Error('Authentication failed');
 
-            return offer;
+            console.log('-->', ctx);
+
+            // const offer = await getCourseData(id);
+            // if (offer) {
+            //     offer.times = JSON.parse(offer.times);
+            // }
+
+            // return offer;
         },
     },
 
     Mutation: {
-        createOffer: async (_: any, { courseData, userId }: any) => {
-            const create_ = await createCourse(courseData, userId);
-            if (create_) {
-                create_.data.times = JSON.parse(create_.data.times);
-            }
-
-            return create_;
+        createOffer: async (parent: any, { courseData, userId }: any) => {
+            // const create_ = await createCourse(courseData, userId);
+            // if (create_) {
+            //     create_.data.times = JSON.parse(create_.data.times);
+            // }
+            // return create_;
         },
 
-        deleteOffer: async (_: any, { offerId, userId }: any) => {
+        deleteOffer: async (parent: any, { offerId, userId }: any) => {
             const delete_ = await deleteCourse(offerId, userId);
             return delete_;
         },
 
-        userRegister: async (_: any, { userData }: any) => {
-            const newUser = await userRegister(userData);
-            return newUser;
-        },
-
         createOfferMatch: async (
-            _: any,
+            parent: any,
             { offerId, NumberOfMatchReq, userId }: any
         ) => {
             const create_request = await createOfferMatchRequest(
@@ -61,7 +59,10 @@ const resolvers: IResolvers = {
             return create_request;
         },
 
-        deleteOfferMatch: async (_: any, { matchRequestId, userId }: any) => {
+        deleteOfferMatch: async (
+            parent: any,
+            { matchRequestId, userId }: any
+        ) => {
             const delete_request = await deleteOfferMatchRequest(
                 matchRequestId,
                 userId
@@ -70,7 +71,7 @@ const resolvers: IResolvers = {
             return delete_request;
         },
 
-        createPupilMatch: async (_: any, { offers, userId }: any) => {
+        createPupilMatch: async (parent: any, { offers, userId }: any) => {
             const create_request = await createPupilMatchRequest(
                 offers,
                 userId
@@ -79,7 +80,10 @@ const resolvers: IResolvers = {
             return create_request;
         },
 
-        deletePupilMatch: async (_: any, { matchRequestId, userId }: any) => {
+        deletePupilMatch: async (
+            parent: any,
+            { matchRequestId, userId }: any
+        ) => {
             const delete_request = await deletePupilMatchRequest(
                 matchRequestId,
                 userId
@@ -100,12 +104,10 @@ const resolvers: IResolvers = {
             return delete_request;
         },
 
-        deleteMatch: async (_: any, { matchId }: any) => {
+        deleteMatch: async (parent: any, { matchId }: any) => {
             const delete_request = await deleteMatchRequest(matchId);
 
             return delete_request;
         },
     },
 };
-
-export default resolvers;

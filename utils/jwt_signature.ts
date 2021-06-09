@@ -2,56 +2,56 @@ import jwt from 'jsonwebtoken';
 
 export const signAccessToken = (userid: string, key: string) => {
     const payload = {
-        _id: userid,
+        userid,
     };
 
     const options = {
         expiresIn: '15m',
-        issuer: 'corona-school',
+        issuer: 'lern-fair.com',
         audience: userid,
     };
 
-    return jwt.sign({ userid: payload }, key, options);
+    return jwt.sign({ payload }, key, options);
 };
 
 export const signRefreshToken = (userid: string, key: string) => {
     const payload = {
-        _id: userid,
+        userid,
     };
 
     const options = {
         expiresIn: '30 days',
-        issuer: 'corona-school',
+        issuer: 'lern-fair.com',
         audience: userid,
     };
 
-    return jwt.sign({ userid: payload }, key, options);
+    return jwt.sign({ payload }, key, options);
 };
 
 export const signForgotToken = (userid: string, key: string) => {
     const payload = {
-        _id: userid,
+        userid,
     };
 
     const options = {
         expiresIn: '5m',
-        issuer: 'corona-school',
+        issuer: 'lern-fair.com',
         audience: userid,
     };
 
-    return jwt.sign({ userid: payload }, key, options);
+    return jwt.sign({ payload }, key, options);
 };
 
 export const generateOnetimeToken = (userid: string, key: string) => {
     const payload = {
-        _id: userid,
+        userid,
     };
 
     const options = {
-        expiresIn: '5 days',
-        issuer: 'corona-school',
+        expiresIn: '2 days',
+        issuer: 'lern-fair.com',
         audience: userid,
     };
 
-    return jwt.sign({ userid: payload }, key, options);
+    return jwt.sign({ payload }, key, options);
 };

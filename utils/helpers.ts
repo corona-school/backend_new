@@ -1,7 +1,10 @@
 import { PrismaClient, User } from '@prisma/client';
+import { decode, verify } from 'jsonwebtoken';
 import { baseURL } from './baseURL';
 import { generateOnetimeToken, signForgotToken } from './jwt_signature';
 import { keys } from './secretKeys';
+import jwt from 'jsonwebtoken';
+import passport from 'passport';
 
 const prisma = new PrismaClient();
 
@@ -183,13 +186,13 @@ export const getPupil = (userId: string) => {
 };
 
 export const userToPupil = async (userId: string) => {
-    return await prisma.pupil.create({
-        data: {
-            user: {
-                connect: {
-                    id: userId,
-                },
-            },
-        },
-    });
+    // return await prisma.pupil.create({
+    //     data: {
+    //         user: {
+    //             connect: {
+    //                 id: userId,
+    //             },
+    //         },
+    //     },
+    // });
 };

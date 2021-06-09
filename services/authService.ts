@@ -90,6 +90,8 @@ export const loginUser = async ({ email, password }: ILogin) => {
                     user.id,
                     keys.accessTokenKey
                 );
+
+                // we will checking if we have referesh token associated with the userid and is valid
                 const validToken = await isRefreshTokenValid(authData.id);
 
                 if (validToken == null) {
