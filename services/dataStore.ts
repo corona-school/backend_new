@@ -232,11 +232,6 @@ export async function deleteUser(email: string, VolunteerId?: string) {
             recipientEmail: email,
         },
     });
-    await dataStore.prisma.offer.deleteMany({
-        where: {
-            volunteerId: VolunteerId,
-        },
-    });
     await dataStore.prisma.volunteer.deleteMany({
         where: {
             userId: user[0].id,

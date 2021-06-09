@@ -5,7 +5,7 @@ import { addUser, deleteUser } from '../../../services/dataStore';
 import {
     createOfferMatchRequest,
     deleteOfferMatchRequest,
-} from '../../../services/offerMatchRequest';
+} from '../../../services/volunteerMatchRequest';
 import { userToVolunteer } from '../../../utils/helpers';
 import {
     test_course,

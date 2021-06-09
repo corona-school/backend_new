@@ -1,8 +1,8 @@
 import {
-    Offer,
+    CourseInstructorMatchRequest,
+    CourseOffer,
     Prisma,
     Volunteer,
-    VolunteerMatchRequest,
 } from '@prisma/client';
 import moment from 'moment';
 import { getVolunteer } from '../utils/helpers';
@@ -16,7 +16,7 @@ if (process.env.valid_until != undefined) {
     logError('(Valid_until) environment variable not defined');
 }
 
-export const createOfferMatchRequest = async (
+export const createInstructorMatchRequest = async (
     offerId: string,
     NumberOfMatchReq: number,
     userId: string
@@ -29,34 +29,25 @@ export const createOfferMatchRequest = async (
         throw new Error('User must be a volunteer to create a match request');
     }
 
-    const courseData: Offer | null = await prisma.offer.findUnique({
+    const courseData: CourseOffer | null = await prisma.courseOffer.findUnique({
         where: {
             id: offerId,
         },
     });
 
-    let MatchReq: Prisma.Prisma__VolunteerMatchRequestClient<VolunteerMatchRequest>[] = [],
-        valid: number[] = [],
+    let MatchReq: Prisma.Prisma__CourseInstructorMatchRequestClient<CourseInstructorMatchRequest>[] = [],
+        validUntil: number[] = [],
         transactionIds: string[] = [];
 
     if (courseData) {
         const courseTimes = JSON.parse(courseData.times);
-        let params = {
-            valid_until: calculateValidTimestamps(
-                valid_until_env,
-                courseTimes[0]
-            ),
-            target_group: courseData.target_group,
-        };
+        validUntil = [
+            calculateValidTimestamps(valid_until_env, courseTimes[0]),
+        ];
 
-        const query = prisma.volunteerMatchRequest.create({
+        const query = prisma.courseInstructorMatchRequest.create({
             data: {
-                parameters: JSON.stringify(params),
-                user: {
-                    connect: {
-                        id: volunteer.id,
-                    },
-                },
+                validUnitil: JSON.stringify(validUntil),
                 offer: {
                     connect: {
                         id: offerId,
@@ -88,7 +79,7 @@ export const createOfferMatchRequest = async (
     }
 };
 
-export const deleteOfferMatchRequest = async (
+export const deleteInstructorMatchRequest = async (
     matchRequestId: string,
     userId: string
 ) => {
@@ -100,11 +91,13 @@ export const deleteOfferMatchRequest = async (
         throw new Error('User must be a volunteer to delete a match request');
     }
 
-    const deleteMatch = await prisma.volunteerMatchRequest.delete({
-        where: {
-            id: matchRequestId,
-        },
-    });
+    const deleteInstructorMatch = await prisma.courseInstructorMatchRequest.delete(
+        {
+            where: {
+                id: matchRequestId,
+            },
+        }
+    );
 
     return {
         data: matchRequestId,

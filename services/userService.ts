@@ -286,13 +286,22 @@ export const userUpdate = async (userData: IUserData, userId: string) => {
     }
 };
 
-export const userRegister = async (userData: any, userEmail: string) => {
-    const findUser: User | null = await findUserByEmail(userEmail);
+export const userRegister = async (userData: {
+    firstName: string;
+    lastName: string | null;
+    email: string;
+    password: string;
+}) => {
+    const findUser: User | null = await findUserByEmail(userData.email);
 
     if (findUser == null) {
         //No user in our record, create a new user
         const createUser = await prisma.user.create({
-            data: userData,
+            data: {
+                firstName: userData.firstName,
+                email: userData.email,
+                lastName: userData.lastName,
+            },
         });
 
         return createUser;
